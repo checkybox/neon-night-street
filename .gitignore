@@ -1,0 +1,34 @@
+# Binaries and object files
+*.o
+*.obj
+*.exe
+*.out
+*.app
+bin/
+build/
+x64/
+x86/
+Debug/
+Release/
+
+# Visual Studio files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+
+# VS Code & IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS metadata
+.DS_Store
+
+# Distribution archives (keep local)
+distribution/
+*.zip
