@@ -10,7 +10,7 @@
 * **Vitaliy Golubenko** (@checkybox) — *Project setup and repository initialization; roles to be assigned as modules develop.*
 * **Erasyl Meirambekov** — *Role to be assigned.*
 * **Ismail Zhanatay** — *Role to be assigned.*
-* **Nurbek Shagarbek** — *Role to be assigned.*
+* **Nurbek Shagarbek** — *Window management, OpenGL 3.3 Core context setup, and event loop.*
 
 ---
 
@@ -21,12 +21,32 @@ An interactive 3D graphical application in modern OpenGL 3.3 Core profile depict
 
 ## 🛠️ Prerequisites & Build Setup
 Target environment: C++11 and OpenGL 3.3+ Core Profile.
-* Build instructions will be documented as the core executable is integrated in upcoming commits.
+
+### Linux (Ubuntu / WSL2)
+Install prerequisites:
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential libglfw3-dev libgl1-mesa-dev libglm-dev libx11-dev libxrandr-dev libxi-dev
+```
+Build and run:
+```bash
+make
+./neon_night_street
+```
+
+### Cross-Platform (CMake)
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+./neon_night_street
+```
 
 ---
 
 ## 🎮 Controls
-* TBD (to be added with camera and interaction modules).
+* **Esc:** Exit application.
+*(Additional navigation and interaction controls will be documented as modules are integrated).*
 
 ---
 

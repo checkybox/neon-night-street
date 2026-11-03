@@ -3,10 +3,19 @@ CXXFLAGS = -Wall -Wextra -O2 -std=c++11 -Iinclude
 LDFLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 
 TARGET = neon_night_street
+SRCS = glad.c src/main.cpp
+OBJS = $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SRCS)))
 
-all:
-	@echo "Repository initialized with C++11 and OpenGL 3.3 Core profile."
-	@echo "Core executable targets will be linked in upcoming milestone."
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(TARGET) *.o src/*.o
