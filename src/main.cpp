@@ -1,6 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <vector>
+
+#include "Shader.h"
+#include "Mesh.h"
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
@@ -49,8 +56,17 @@ int main() {
 
     glEnable(GL_DEPTH_TEST);
 
-    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    Shader sceneShader("shaders/scene.vert", "shaders/scene.frag");
+
+    // Initial test geometry to verify pipeline and vertex attributes
+    std::vector<Vertex> testVertices = {
+        { glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.9f, 0.9f) }, // Cyan
+        { glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 0.1f, 0.7f) }, // Neon Pink
+        { glm::vec3( 0.0f,  0.5f, 0.0f), glm::vec3(0.2f, 1.0f, 0.4f) }  // Lime
+    };
+    std::vector<unsigned int> testIndices = { 0, 1, 2 };
+
+    Mesh testMesh(testVertices, testIndices);
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -58,6 +74,18 @@ int main() {
         // Dark atmospheric night background
         glClearColor(0.02f, 0.02f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        sceneShader.use();
+
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+        sceneShader.setMat4("model", model);
+        sceneShader.setMat4("view", view);
+        sceneShader.setMat4("projection", projection);
+
+        testMesh.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

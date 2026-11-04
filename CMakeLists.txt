@@ -6,7 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-add_executable(${PROJECT_NAME} glad.c src/main.cpp)
+add_executable(${PROJECT_NAME} 
+    glad.c 
+    src/main.cpp 
+    src/Shader.cpp 
+    src/Mesh.cpp
+)
 
 if(WIN32)
     find_package(glfw3 CONFIG QUIET)

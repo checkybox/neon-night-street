@@ -9,7 +9,7 @@
 ## 👥 Team Members (Group SE-2423)
 * **Vitaliy Golubenko** (@checkybox) — *Project setup and repository initialization; roles to be assigned as modules develop.*
 * **Erasyl Meirambekov** — *Role to be assigned.*
-* **Ismail Zhanatay** — *Role to be assigned.*
+* **Ismail Zhanatay** — *Shader program wrapper, GLSL 330 pipeline, and vertex buffer abstractions.*
 * **Nurbek Shagarbek** — *Window management, OpenGL 3.3 Core context setup, and event loop.*
 
 ---
