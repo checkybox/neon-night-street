@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -Wextra -O2 -std=c++11 -Iinclude
 LDFLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 
 TARGET = neon_night_street
-SRCS = glad.c src/main.cpp src/Shader.cpp src/Mesh.cpp
+SRCS = glad.c src/main.cpp src/Shader.cpp src/Mesh.cpp src/Scene.cpp
 OBJS = $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SRCS)))
 
 all: $(TARGET)

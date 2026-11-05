@@ -4,10 +4,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-#include <vector>
 
 #include "Shader.h"
-#include "Mesh.h"
+#include "Scene.h"
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
@@ -58,34 +57,33 @@ int main() {
 
     Shader sceneShader("shaders/scene.vert", "shaders/scene.frag");
 
-    // Initial test geometry to verify pipeline and vertex attributes
-    std::vector<Vertex> testVertices = {
-        { glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.9f, 0.9f) }, // Cyan
-        { glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 0.1f, 0.7f) }, // Neon Pink
-        { glm::vec3( 0.0f,  0.5f, 0.0f), glm::vec3(0.2f, 1.0f, 0.4f) }  // Lime
-    };
-    std::vector<unsigned int> testIndices = { 0, 1, 2 };
-
-    Mesh testMesh(testVertices, testIndices);
+    Scene scene;
+    scene.init();
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        // Dark atmospheric night background
         glClearColor(0.02f, 0.02f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         sceneShader.use();
 
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // Initial perspective view looking down the night street
+        glm::mat4 view = glm::lookAt(
+            glm::vec3(0.0f, 2.0f, 16.0f),
+            glm::vec3(0.0f, 2.0f, -10.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+        glm::mat4 projection = glm::perspective(
+            glm::radians(60.0f), 
+            (float)SCR_WIDTH / (float)SCR_HEIGHT, 
+            0.1f, 150.0f
+        );
 
-        sceneShader.setMat4("model", model);
         sceneShader.setMat4("view", view);
         sceneShader.setMat4("projection", projection);
 
-        testMesh.draw();
+        scene.render(sceneShader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

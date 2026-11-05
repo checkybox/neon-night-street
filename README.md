@@ -7,8 +7,8 @@
 ---
 
 ## 👥 Team Members (Group SE-2423)
-* **Vitaliy Golubenko** (@checkybox) — *Project setup and repository initialization; roles to be assigned as modules develop.*
-* **Erasyl Meirambekov** — *Role to be assigned.*
+* **Vitaliy Golubenko** (@checkybox) — *Project setup and repository initialization; walking camera system.*
+* **Erasyl Meirambekov** — *Modular 3D street geometry, sidewalk curbs, and scene graph transformation pipeline.*
 * **Ismail Zhanatay** — *Shader program wrapper, GLSL 330 pipeline, and vertex buffer abstractions.*
 * **Nurbek Shagarbek** — *Window management, OpenGL 3.3 Core context setup, and event loop.*
 
@@ -46,7 +46,7 @@ cmake --build .
 
 ## 🎮 Controls
 * **Esc:** Exit application.
-*(Additional navigation and interaction controls will be documented as modules are integrated).*
+*(Walking camera controls WASD and mouse look will be introduced in the next milestone).*
 
 ---
 
