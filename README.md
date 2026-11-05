@@ -7,7 +7,7 @@
 ---
 
 ## 👥 Team Members (Group SE-2423)
-* **Vitaliy Golubenko** (@checkybox) — *Project setup and repository initialization; walking camera system.*
+* **Vitaliy Golubenko** (@checkybox) — *Project setup, build configuration, FPS walking camera with street boundary limits, and vendored math library.*
 * **Erasyl Meirambekov** — *Modular 3D street geometry, sidewalk curbs, and scene graph transformation pipeline.*
 * **Ismail Zhanatay** — *Shader program wrapper, GLSL 330 pipeline, and vertex buffer abstractions.*
 * **Nurbek Shagarbek** — *Window management, OpenGL 3.3 Core context setup, and event loop.*
@@ -21,12 +21,13 @@ An interactive 3D graphical application in modern OpenGL 3.3 Core profile depict
 
 ## 🛠️ Prerequisites & Build Setup
 Target environment: C++11 and OpenGL 3.3+ Core Profile.
+All math library headers (GLM) and OpenGL loader headers (GLAD) are self-contained within the repository.
 
 ### Linux (Ubuntu / WSL2)
 Install prerequisites:
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential libglfw3-dev libgl1-mesa-dev libglm-dev libx11-dev libxrandr-dev libxi-dev
+sudo apt-get install -y build-essential libglfw3-dev libgl1-mesa-dev libx11-dev libxrandr-dev libxi-dev
 ```
 Build and run:
 ```bash
@@ -45,8 +46,11 @@ cmake --build .
 ---
 
 ## 🎮 Controls
+* **W / A / S / D:** Walk forward / left / backward / right (constrained to street walking plane).
+* **Mouse Look:** Look around (pitch & yaw). Drag with Left Mouse Button or toggle lock.
+* **Arrow Keys (← / → / ↑ / ↓):** Turn and pitch camera directly (universal fallback across all window managers).
+* **C / Tab:** Toggle cursor capture mode (captured vs free mouse).
 * **Esc:** Exit application.
-*(Walking camera controls WASD and mouse look will be introduced in the next milestone).*
 
 ---
 
