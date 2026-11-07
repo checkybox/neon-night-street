@@ -1,10 +1,11 @@
 #include "Scene.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <string>
 
-SceneNode::SceneNode() : mesh(nullptr), localTransform(glm::mat4(1.0f)) {}
+SceneNode::SceneNode() : mesh(nullptr), localTransform(glm::mat4(1.0f)), isEmissive(false) {}
 
-SceneNode::SceneNode(std::shared_ptr<Mesh> mesh, const glm::mat4& transform)
-    : mesh(mesh), localTransform(transform) {}
+SceneNode::SceneNode(std::shared_ptr<Mesh> mesh, const glm::mat4& transform, bool isEmissive)
+    : mesh(mesh), localTransform(transform), isEmissive(isEmissive) {}
 
 void SceneNode::addChild(const SceneNode& child) {
     children.push_back(child);
@@ -14,6 +15,7 @@ void SceneNode::draw(const Shader& shader, const glm::mat4& parentTransform) con
     glm::mat4 globalTransform = parentTransform * localTransform;
 
     if (mesh) {
+        shader.setBool("isEmissive", isEmissive);
         shader.setMat4("model", globalTransform);
         mesh->draw();
     }
@@ -93,34 +95,40 @@ std::shared_ptr<Mesh> Scene::createBox(float width, float height, float depth, c
 
 void Scene::init() {
     rootNodes.clear();
+    pointLights.clear();
 
-    // 1. Road surface
-    auto roadMesh = createPlane(8.0f, 60.0f, glm::vec3(0.08f, 0.08f, 0.09f));
+    // Setup Directional Moonlight (Night ambient fill)
+    dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+    dirLight.ambient   = glm::vec3(0.03f, 0.03f, 0.07f);
+    dirLight.diffuse   = glm::vec3(0.06f, 0.07f, 0.12f);
+    dirLight.specular  = glm::vec3(0.08f, 0.09f, 0.15f);
+
+    // 1. Road surface (asphalt)
+    auto roadMesh = createPlane(8.0f, 60.0f, glm::vec3(0.12f, 0.12f, 0.13f));
     glm::mat4 roadTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
     rootNodes.push_back(SceneNode(roadMesh, roadTransform));
 
     // 2. Center lane stripes
-    auto stripeMesh = createPlane(0.2f, 2.0f, glm::vec3(0.85f, 0.75f, 0.1f));
+    auto stripeMesh = createPlane(0.2f, 2.0f, glm::vec3(0.9f, 0.8f, 0.2f));
     for (float z = -36.0f; z <= 16.0f; z += 5.0f) {
         glm::mat4 stripeTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z));
         rootNodes.push_back(SceneNode(stripeMesh, stripeTransform));
     }
 
-    // 3. Sidewalks (elevated curbs)
-    auto sidewalkMesh = createBox(3.0f, 0.2f, 60.0f, glm::vec3(0.2f, 0.2f, 0.22f));
-    // Left sidewalk
+    // 3. Sidewalks (elevated concrete curbs)
+    auto sidewalkMesh = createBox(3.0f, 0.2f, 60.0f, glm::vec3(0.22f, 0.22f, 0.24f));
     glm::mat4 leftSidewalkTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-5.5f, 0.1f, -10.0f));
     rootNodes.push_back(SceneNode(sidewalkMesh, leftSidewalkTransform));
-    // Right sidewalk
+
     glm::mat4 rightSidewalkTransform = glm::translate(glm::mat4(1.0f), glm::vec3(5.5f, 0.1f, -10.0f));
     rootNodes.push_back(SceneNode(sidewalkMesh, rightSidewalkTransform));
 
     // 4. Modular buildings along both sides of the street
     glm::vec3 buildingColors[] = {
-        glm::vec3(0.14f, 0.13f, 0.15f),
-        glm::vec3(0.11f, 0.12f, 0.16f),
-        glm::vec3(0.15f, 0.11f, 0.11f),
-        glm::vec3(0.12f, 0.14f, 0.13f)
+        glm::vec3(0.18f, 0.17f, 0.20f),
+        glm::vec3(0.15f, 0.16f, 0.22f),
+        glm::vec3(0.20f, 0.15f, 0.16f),
+        glm::vec3(0.16f, 0.18f, 0.17f)
     };
 
     float zStart = -35.0f;
@@ -132,54 +140,143 @@ void Scene::init() {
 
         auto buildingMesh = createBox(bWidth, bHeight, bDepth, buildingColors[i % 4]);
 
-        // Left building block
         glm::mat4 leftBldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, bHeight * 0.5f, zPos));
         rootNodes.push_back(SceneNode(buildingMesh, leftBldTransform));
 
-        // Right building block
         glm::mat4 rightBldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, bHeight * 0.5f, zPos));
         rootNodes.push_back(SceneNode(buildingMesh, rightBldTransform));
     }
 
-    // 5. Street boundaries / Roadblock barriers
+    // 5. Roadblock barriers
     auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
     glm::mat4 northBarrier = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, -39.0f));
     glm::mat4 southBarrier = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 19.0f));
     rootNodes.push_back(SceneNode(barrierMesh, northBarrier));
     rootNodes.push_back(SceneNode(barrierMesh, southBarrier));
 
-    // 6. Hierarchical Streetlamps (Parent: Pole -> Child: Arm & Fixture)
-    auto poleMesh = createBox(0.2f, 4.5f, 0.2f, glm::vec3(0.15f, 0.15f, 0.16f));
-    auto armMesh = createBox(1.2f, 0.15f, 0.15f, glm::vec3(0.2f, 0.2f, 0.22f));
-    auto fixtureMesh = createBox(0.4f, 0.2f, 0.3f, glm::vec3(0.0f, 0.85f, 0.85f)); // Cyan neon fixture
+    // 6. Hierarchical Streetlamps & 8 Streetlamp Point Lights
+    auto poleMesh = createBox(0.2f, 4.5f, 0.2f, glm::vec3(0.2f, 0.2f, 0.22f));
+    auto armMesh = createBox(1.2f, 0.15f, 0.15f, glm::vec3(0.25f, 0.25f, 0.27f));
+
+    // Emissive Fixture Meshes
+    glm::vec3 cyanLightColor(0.0f, 0.9f, 1.0f);
+    glm::vec3 amberLightColor(1.0f, 0.65f, 0.15f);
+
+    auto cyanFixtureMesh = createBox(0.4f, 0.2f, 0.3f, cyanLightColor);
+    auto amberFixtureMesh = createBox(0.4f, 0.2f, 0.3f, amberLightColor);
 
     float lampZPositions[] = { -30.0f, -15.0f, 0.0f, 12.0f };
+
+    // Common light attenuation coefficients (tuned for ~18-22m radius)
+    float constant = 1.0f;
+    float linear = 0.14f;
+    float quadratic = 0.07f;
+
+    // 4 Left Streetlamps (Cyan Neon)
     for (float z : lampZPositions) {
-        // Left streetlamp
-        glm::mat4 poleTransformLeft = glm::translate(glm::mat4(1.0f), glm::vec3(-4.2f, 2.25f, z));
-        SceneNode poleNodeLeft(poleMesh, poleTransformLeft);
+        glm::mat4 poleTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-4.2f, 2.25f, z));
+        SceneNode poleNode(poleMesh, poleTransform);
 
-        glm::mat4 armTransformLeft = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 2.1f, 0.0f));
-        SceneNode armNodeLeft(armMesh, armTransformLeft);
+        glm::mat4 armTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 2.1f, 0.0f));
+        SceneNode armNode(armMesh, armTransform);
 
+        // Fixture is emissive (true)
         glm::mat4 fixtureTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.15f, 0.0f));
-        armNodeLeft.addChild(SceneNode(fixtureMesh, fixtureTransform));
+        armNode.addChild(SceneNode(cyanFixtureMesh, fixtureTransform, true));
 
-        poleNodeLeft.addChild(armNodeLeft);
-        rootNodes.push_back(poleNodeLeft);
+        poleNode.addChild(armNode);
+        rootNodes.push_back(poleNode);
 
-        // Right streetlamp
-        glm::mat4 poleTransformRight = glm::translate(glm::mat4(1.0f), glm::vec3(4.2f, 2.25f, z));
-        SceneNode poleNodeRight(poleMesh, poleTransformRight);
+        // Add Point Light to lighting array
+        PointLight pl;
+        pl.position = glm::vec3(-3.2f, 4.2f, z);
+        pl.ambient = cyanLightColor * 0.05f;
+        pl.diffuse = cyanLightColor * 1.2f;
+        pl.specular = cyanLightColor * 1.0f;
+        pl.constant = constant;
+        pl.linear = linear;
+        pl.quadratic = quadratic;
+        pointLights.push_back(pl);
+    }
 
-        glm::mat4 armTransformRight = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 2.1f, 0.0f));
-        SceneNode armNodeRight(armMesh, armTransformRight);
+    // 4 Right Streetlamps (Amber Neon)
+    for (float z : lampZPositions) {
+        glm::mat4 poleTransform = glm::translate(glm::mat4(1.0f), glm::vec3(4.2f, 2.25f, z));
+        SceneNode poleNode(poleMesh, poleTransform);
 
-        glm::mat4 fixtureTransformRight = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.15f, 0.0f));
-        armNodeRight.addChild(SceneNode(fixtureMesh, fixtureTransformRight));
+        glm::mat4 armTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 2.1f, 0.0f));
+        SceneNode armNode(armMesh, armTransform);
 
-        poleNodeRight.addChild(armNodeRight);
-        rootNodes.push_back(poleNodeRight);
+        // Fixture is emissive (true)
+        glm::mat4 fixtureTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.15f, 0.0f));
+        armNode.addChild(SceneNode(amberFixtureMesh, fixtureTransform, true));
+
+        poleNode.addChild(armNode);
+        rootNodes.push_back(poleNode);
+
+        // Add Point Light to lighting array
+        PointLight pl;
+        pl.position = glm::vec3(3.2f, 4.2f, z);
+        pl.ambient = amberLightColor * 0.05f;
+        pl.diffuse = amberLightColor * 1.2f;
+        pl.specular = amberLightColor * 1.0f;
+        pl.constant = constant;
+        pl.linear = linear;
+        pl.quadratic = quadratic;
+        pointLights.push_back(pl);
+    }
+
+    // 7. Storefront Neon Signs & 2 Vibrant Neon Accent Lights (Total = 10 point lights!)
+    // Sign 1: Electric Magenta Neon Sign on Left Building (Z = -8.0)
+    glm::vec3 magentaColor(1.0f, 0.05f, 0.6f);
+    auto magentaSignMesh = createBox(0.2f, 1.5f, 3.5f, magentaColor);
+    glm::mat4 magentaTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-6.9f, 3.2f, -8.0f));
+    rootNodes.push_back(SceneNode(magentaSignMesh, magentaTransform, true));
+
+    PointLight magentaLight;
+    magentaLight.position = glm::vec3(-6.5f, 3.2f, -8.0f);
+    magentaLight.ambient = magentaColor * 0.06f;
+    magentaLight.diffuse = magentaColor * 1.8f;
+    magentaLight.specular = magentaColor * 1.5f;
+    magentaLight.constant = constant;
+    magentaLight.linear = 0.22f;
+    magentaLight.quadratic = 0.12f;
+    pointLights.push_back(magentaLight);
+
+    // Sign 2: Electric Lime Neon Sign on Right Building (Z = -22.0)
+    glm::vec3 limeColor(0.1f, 1.0f, 0.35f);
+    auto limeSignMesh = createBox(0.2f, 1.5f, 3.5f, limeColor);
+    glm::mat4 limeTransform = glm::translate(glm::mat4(1.0f), glm::vec3(6.9f, 3.2f, -22.0f));
+    rootNodes.push_back(SceneNode(limeSignMesh, limeTransform, true));
+
+    PointLight limeLight;
+    limeLight.position = glm::vec3(6.5f, 3.2f, -22.0f);
+    limeLight.ambient = limeColor * 0.06f;
+    limeLight.diffuse = limeColor * 1.8f;
+    limeLight.specular = limeColor * 1.5f;
+    limeLight.constant = constant;
+    limeLight.linear = 0.22f;
+    limeLight.quadratic = 0.12f;
+    pointLights.push_back(limeLight);
+}
+
+void Scene::setupLights(const Shader& shader) {
+    // Directional moonlight
+    shader.setVec3("dirLight.direction", dirLight.direction);
+    shader.setVec3("dirLight.ambient", dirLight.ambient);
+    shader.setVec3("dirLight.diffuse", dirLight.diffuse);
+    shader.setVec3("dirLight.specular", dirLight.specular);
+
+    // 10 Point Lights
+    for (size_t i = 0; i < pointLights.size(); ++i) {
+        std::string prefix = "pointLights[" + std::to_string(i) + "].";
+        shader.setVec3(prefix + "position", pointLights[i].position);
+        shader.setVec3(prefix + "ambient", pointLights[i].ambient);
+        shader.setVec3(prefix + "diffuse", pointLights[i].diffuse);
+        shader.setVec3(prefix + "specular", pointLights[i].specular);
+        shader.setFloat(prefix + "constant", pointLights[i].constant);
+        shader.setFloat(prefix + "linear", pointLights[i].linear);
+        shader.setFloat(prefix + "quadratic", pointLights[i].quadratic);
     }
 }
 

@@ -10,7 +10,7 @@
 * **Vitaliy Golubenko** (@checkybox) — *Project setup, build configuration, FPS walking camera with street boundary limits, and vendored math library.*
 * **Erasyl Meirambekov** — *Modular 3D street geometry, sidewalk curbs, and scene graph transformation pipeline.*
 * **Ismail Zhanatay** — *Shader program wrapper, GLSL 330 pipeline, and vertex buffer abstractions.*
-* **Nurbek Shagarbek** — *Window management, OpenGL 3.3 Core context setup, and event loop.*
+* **Nurbek Shagarbek** — *Window management, Blinn-Phong lighting model, and 8+ colored point lights with attenuation.*
 
 ---
 

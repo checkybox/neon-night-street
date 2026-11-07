@@ -141,6 +141,9 @@ int main() {
     Scene scene;
     scene.init();
 
+    sceneShader.use();
+    scene.setupLights(sceneShader);
+
     double lastFpsTime = glfwGetTime();
     int frameCount = 0;
 
@@ -164,6 +167,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         sceneShader.use();
+        sceneShader.setVec3("viewPos", camera.Position);
 
         glm::mat4 view = camera.GetViewMatrix();
         float aspect = (currentFbHeight > 0) 
