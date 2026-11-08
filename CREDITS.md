@@ -17,16 +17,23 @@ This document tracks all external libraries, code references, textures, models, 
   * Author: G-Truc Creation
   * Link: https://github.com/g-truc/glm
   * License: The Happy Bunny License (Modified MIT)
+* **stb_image:**
+  * Author: Sean T. Barrett
+  * Link: https://github.com/nothings/stb
+  * License: MIT / Public Domain
 
 ---
 
-## 2. Tutorials & References
+## 2. Fonts
+* **Noto Sans Japanese (Google Fonts):**
+  * Author: Google Fonts / Adobe Systems
+  * Link: https://fonts.google.com/noto/specimen/Noto+Sans+JP
+  * License: SIL Open Font License (OFL) 1.1
+
+---
+
+## 3. Tutorials & References
 * **LearnOpenGL (Joey de Vries):**
-  * Topics referenced: Pipeline architecture, Camera system, Lighting with attenuation, and Particle systems.
+  * Topics referenced: Pipeline architecture, Camera system, Lighting with attenuation, Texture mapping with mipmaps.
   * Link: https://learnopengl.com/
   * License: CC BY 4.0
-
----
-
-## 3. Assets & Textures (To be credited upon integration)
-*(Any external textures, shaders, or 3D models integrated will be cited here).*

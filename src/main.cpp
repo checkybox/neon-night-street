@@ -115,6 +115,7 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable V-Sync to cap at 60 FPS and prevent CPU busy-spin loop
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -129,6 +130,11 @@ int main() {
         glfwTerminate();
         return -1;
     }
+
+    const GLubyte* renderer = glGetString(GL_RENDERER);
+    const GLubyte* version = glGetString(GL_VERSION);
+    std::cout << "[OpenGL] Renderer: " << (renderer ? reinterpret_cast<const char*>(renderer) : "Unknown") << std::endl;
+    std::cout << "[OpenGL] Version:  " << (version  ? reinterpret_cast<const char*>(version)  : "Unknown") << std::endl;
 
     // Query physical pixel framebuffer dimensions (fixes Wayland / High-DPI scaling)
     glfwGetFramebufferSize(window, &currentFbWidth, &currentFbHeight);

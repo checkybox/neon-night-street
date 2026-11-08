@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
     src/Mesh.cpp
     src/Scene.cpp
     src/Camera.cpp
+    src/Texture.cpp
 )
 
 if(WIN32)

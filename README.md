@@ -9,7 +9,7 @@
 ## 👥 Team Members (Group SE-2423)
 * **Vitaliy Golubenko** (@checkybox) — *Project setup, build configuration, FPS walking camera with street boundary limits, and vendored math library.*
 * **Erasyl Meirambekov** — *Modular 3D street geometry, sidewalk curbs, and scene graph transformation pipeline.*
-* **Ismail Zhanatay** — *Shader program wrapper, GLSL 330 pipeline, and vertex buffer abstractions.*
+* **Ismail Zhanatay** — *Shader program wrapper, texture loader (stb_image), UV mapping with mipmapping, and wet puddle specular shader.*
 * **Nurbek Shagarbek** — *Window management, Blinn-Phong lighting model, and 8+ colored point lights with attenuation.*
 
 ---
