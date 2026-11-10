@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     src/Scene.cpp
     src/Camera.cpp
     src/Texture.cpp
+    src/Model.cpp
 )
 
 if(WIN32)
@@ -22,7 +23,12 @@ if(WIN32)
         target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
     else()
         find_package(OpenGL REQUIRED)
-        target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
+        find_library(GLFW_LIB NAMES glfw3 glfw PATHS "${CMAKE_SOURCE_DIR}/../Libraries/lib" "${CMAKE_SOURCE_DIR}/lib")
+        if(GLFW_LIB)
+            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL ${GLFW_LIB})
+        else()
+            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw3)
+        endif()
     endif()
 elseif(APPLE)
     find_package(OpenGL REQUIRED)
@@ -37,3 +43,22 @@ else()
         target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw X11 pthread Xrandr Xi dl)
     endif()
 endif()
+
+if(MSVC)
+    set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/shaders"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "${CMAKE_BINARY_DIR}/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/shaders"
+        "${CMAKE_BINARY_DIR}/shaders"
+)

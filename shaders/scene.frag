@@ -24,7 +24,7 @@ struct PointLight {
     float quadratic;
 };
 
-#define NR_POINT_LIGHTS 10
+#define NR_POINT_LIGHTS 16
 
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];

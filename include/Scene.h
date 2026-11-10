@@ -8,6 +8,7 @@
 #include "Shader.h"
 #include "Light.h"
 #include "Texture.h"
+#include "Model.h"
 
 struct SceneNode {
     std::shared_ptr<Mesh> mesh;
@@ -43,12 +44,11 @@ private:
     std::vector<PointLight> pointLights;
 
     std::shared_ptr<Texture> asphaltTex;
-    std::shared_ptr<Texture> ramenTex;
-    std::shared_ptr<Texture> barTex;
-    std::shared_ptr<Texture> hotelTex;
 
     std::shared_ptr<Mesh> createBox(float width, float height, float depth, const glm::vec3& color);
     std::shared_ptr<Mesh> createPlane(float width, float depth, const glm::vec3& color, float tileX = 1.0f, float tileY = 1.0f);
+    std::shared_ptr<Mesh> createCylinder(float radius, float height, int segments, const glm::vec3& color, bool capEnds = true);
+    std::shared_ptr<Mesh> createCornerCurb(float centerX, float centerZ, float radius, float startAngleRad, float endAngleRad, float innerX, float innerZ, float height, int segments, const glm::vec3& color);
 };
 
 #endif
