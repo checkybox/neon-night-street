@@ -43,10 +43,8 @@ Scene::~Scene() {}
 std::shared_ptr<Mesh> Scene::createPlane(float width, float depth, const glm::vec3& color, float tileX, float tileY) {
     float hw = width * 0.5f, hd = depth * 0.5f;
     std::vector<Vertex> vertices = {
-        { glm::vec3(-hw, 0.0f, -hd), glm::vec3(0.0f, 1.0f, 0.0f), color, glm::vec2(0.0f, tileY) },
-        { glm::vec3( hw, 0.0f, -hd), glm::vec3(0.0f, 1.0f, 0.0f), color, glm::vec2(tileX, tileY) },
-        { glm::vec3( hw, 0.0f,  hd), glm::vec3(0.0f, 1.0f, 0.0f), color, glm::vec2(tileX, 0.0f) },
-        { glm::vec3(-hw, 0.0f,  hd), glm::vec3(0.0f, 1.0f, 0.0f), color, glm::vec2(0.0f, 0.0f) }
+        { {-hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, tileY} }, { { hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, tileY} },
+        { { hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, 0.0f} }, { {-hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, 0.0f} }
     };
     std::vector<unsigned int> indices = { 0, 2, 1, 0, 3, 2 };
     return std::make_shared<Mesh>(vertices, indices);
@@ -55,36 +53,18 @@ std::shared_ptr<Mesh> Scene::createPlane(float width, float depth, const glm::ve
 std::shared_ptr<Mesh> Scene::createBox(float width, float height, float depth, const glm::vec3& color) {
     float w = width * 0.5f, h = height * 0.5f, d = depth * 0.5f;
     std::vector<Vertex> vertices = {
-        // front face
-        { glm::vec3(-w, -h,  d), glm::vec3( 0.0f,  0.0f,  1.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3( w, -h,  d), glm::vec3( 0.0f,  0.0f,  1.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3( w,  h,  d), glm::vec3( 0.0f,  0.0f,  1.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3(-w,  h,  d), glm::vec3( 0.0f,  0.0f,  1.0f), color, glm::vec2(0.0f, 1.0f) },
-        // back face
-        { glm::vec3( w, -h, -d), glm::vec3( 0.0f,  0.0f, -1.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3(-w, -h, -d), glm::vec3( 0.0f,  0.0f, -1.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3(-w,  h, -d), glm::vec3( 0.0f,  0.0f, -1.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3( w,  h, -d), glm::vec3( 0.0f,  0.0f, -1.0f), color, glm::vec2(0.0f, 1.0f) },
-        // top face
-        { glm::vec3(-w,  h,  d), glm::vec3( 0.0f,  1.0f,  0.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3( w,  h,  d), glm::vec3( 0.0f,  1.0f,  0.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3( w,  h, -d), glm::vec3( 0.0f,  1.0f,  0.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3(-w,  h, -d), glm::vec3( 0.0f,  1.0f,  0.0f), color, glm::vec2(0.0f, 1.0f) },
-        // bottom face
-        { glm::vec3(-w, -h, -d), glm::vec3( 0.0f, -1.0f,  0.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3( w, -h, -d), glm::vec3( 0.0f, -1.0f,  0.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3( w, -h,  d), glm::vec3( 0.0f, -1.0f,  0.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3(-w, -h,  d), glm::vec3( 0.0f, -1.0f,  0.0f), color, glm::vec2(0.0f, 1.0f) },
-        // right face
-        { glm::vec3( w, -h,  d), glm::vec3( 1.0f,  0.0f,  0.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3( w, -h, -d), glm::vec3( 1.0f,  0.0f,  0.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3( w,  h, -d), glm::vec3( 1.0f,  0.0f,  0.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3( w,  h,  d), glm::vec3( 1.0f,  0.0f,  0.0f), color, glm::vec2(0.0f, 1.0f) },
-        // left face
-        { glm::vec3(-w, -h, -d), glm::vec3(-1.0f,  0.0f,  0.0f), color, glm::vec2(0.0f, 0.0f) },
-        { glm::vec3(-w, -h,  d), glm::vec3(-1.0f,  0.0f,  0.0f), color, glm::vec2(1.0f, 0.0f) },
-        { glm::vec3(-w,  h,  d), glm::vec3(-1.0f,  0.0f,  0.0f), color, glm::vec2(1.0f, 1.0f) },
-        { glm::vec3(-w,  h, -d), glm::vec3(-1.0f,  0.0f,  0.0f), color, glm::vec2(0.0f, 1.0f) }
+        { {-w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 0.0f} }, { { w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 0.0f} },
+        { { w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 1.0f} }, { {-w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 1.0f} },
+        { { w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 0.0f} }, { {-w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 0.0f} },
+        { {-w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 1.0f} }, { { w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 1.0f} },
+        { {-w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 0.0f} },
+        { { w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 1.0f} },
+        { {-w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 0.0f} },
+        { { w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 1.0f} },
+        { { w, -h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
+        { { w,  h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { { w,  h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} },
+        { {-w, -h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { {-w, -h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
+        { {-w,  h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} }
     };
     std::vector<unsigned int> indices = {
          0,  1,  2,  0,  2,  3,   4,  5,  6,  4,  6,  7,
@@ -175,10 +155,10 @@ void Scene::init() {
 
     asphaltTex = std::make_shared<Texture>("assets/textures/asphalt.png", true);
 
-    dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
-    dirLight.ambient   = glm::vec3(0.03f, 0.03f, 0.07f);
-    dirLight.diffuse   = glm::vec3(0.06f, 0.07f, 0.12f);
-    dirLight.specular  = glm::vec3(0.08f, 0.09f, 0.15f);
+    dirLight.direction = glm::vec3(-0.4f, -0.65f, -0.4f);
+    dirLight.ambient   = glm::vec3(0.04f, 0.05f, 0.08f);
+    dirLight.diffuse   = glm::vec3(0.12f, 0.14f, 0.20f);
+    dirLight.specular  = glm::vec3(0.15f, 0.18f, 0.25f);
 
     // continuous base foundation ground plane
     auto baseGround = createPlane(60.0f, 80.0f, glm::vec3(0.12f), 24.0f, 32.0f);
@@ -241,9 +221,13 @@ void Scene::init() {
     auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
     rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, -39.0f))));
     rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 19.0f))));
-    glm::mat4 eastBarTr = glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 0.5f, -8.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    rootNodes.push_back(SceneNode(barrierMesh, eastBarTr));
+    rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 0.5f, -8.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))));
     rootNodes.push_back(SceneNode(createBox(0.4f, 6.0f, 8.0f, glm::vec3(0.18f, 0.17f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-18.5f, 3.0f, -8.0f))));
+
+    // perimeter security walls sealing backstage light bleeds behind buildings
+    auto fenceWall = createBox(0.3f, 4.0f, 26.0f, glm::vec3(0.16f, 0.16f, 0.18f));
+    rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3( 14.5f, 2.0f, -26.0f))));
+    rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3(-14.5f, 2.0f, -26.0f))));
 
     // west alley metal dumpster, crate and alley lamp
     rootNodes.push_back(SceneNode(createBox(1.6f, 1.2f, 2.4f, glm::vec3(0.16f, 0.25f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 0.7f, -8.0f))));
@@ -253,11 +237,10 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(createBox(0.8f, 0.8f, 0.8f, glm::vec3(0.35f, 0.28f, 0.20f)), glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 0.4f, -6.0f))));
     rootNodes.push_back(SceneNode(createBox(0.3f, 0.15f, 0.2f, glm::vec3(0.2f, 0.85f, 0.8f)), glm::translate(glm::mat4(1.0f), glm::vec3(-18.2f, 3.0f, -8.0f)), true));
 
-    PointLight alleyLight;
-    alleyLight.position = glm::vec3(-17.0f, 2.8f, -8.0f);
-    alleyLight.ambient = glm::vec3(0.01f, 0.05f, 0.05f); alleyLight.diffuse = glm::vec3(0.2f, 0.85f, 0.8f); alleyLight.specular = glm::vec3(0.2f, 0.85f, 0.8f);
-    alleyLight.constant = 1.0f; alleyLight.linear = 0.18f; alleyLight.quadratic = 0.09f;
-    pointLights.push_back(alleyLight);
+    auto addPoint = [&](const glm::vec3& p, const glm::vec3& c, float amb, float diff, float spec, float lin, float quad) {
+        pointLights.push_back({ p, c * amb, c * diff, c * spec, 1.0f, lin, quad });
+    };
+    addPoint(glm::vec3(-17.0f, 2.8f, -8.0f), glm::vec3(0.2f, 0.85f, 0.8f), 0.05f, 1.0f, 1.0f, 0.18f, 0.09f);
 
     // konbini building with unified material color and seamless pillars
     glm::vec3 storeColor(0.24f, 0.23f, 0.22f);
@@ -304,11 +287,7 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(windowFrame, glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.3f, 4.95f))));
     rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, 4.95f)), true));
 
-    PointLight storeLight;
-    storeLight.position = glm::vec3(-5.5f, 2.0f, 3.0f);
-    storeLight.ambient  = warmStoreGlow * 0.05f; storeLight.diffuse = warmStoreGlow * 1.8f; storeLight.specular = warmStoreGlow * 1.5f;
-    storeLight.constant = 1.0f; storeLight.linear = 0.16f; storeLight.quadratic = 0.08f;
-    pointLights.push_back(storeLight);
+    addPoint(glm::vec3(-5.5f, 2.0f, 3.0f), warmStoreGlow, 0.05f, 1.8f, 1.5f, 0.16f, 0.08f);
 
     // vending machines and trash can placed on alley sidewalk
     auto vend1Body = createBox(1.1f, 2.05f, 0.8f, glm::vec3(0.08f, 0.14f, 0.28f));
@@ -324,12 +303,8 @@ void Scene::init() {
     auto trashCan = createCylinder(0.26f, 1.1f, 16, glm::vec3(0.12f, 0.32f, 0.18f), true);
     rootNodes.push_back(SceneNode(trashCan, glm::translate(glm::mat4(1.0f), glm::vec3(-10.8f, 0.65f, -3.1f))));
 
-    PointLight vendLight;
-    vendLight.position = glm::vec3(-8.9f, 1.5f, -4.2f);
     glm::vec3 vendColor(0.85f, 0.95f, 1.0f);
-    vendLight.ambient  = vendColor * 0.04f; vendLight.diffuse = vendColor * 1.9f; vendLight.specular = vendColor * 1.6f;
-    vendLight.constant = 1.0f; vendLight.linear = 0.18f; vendLight.quadratic = 0.09f;
-    pointLights.push_back(vendLight);
+    addPoint(glm::vec3(-8.9f, 1.5f, -4.2f), vendColor, 0.04f, 1.9f, 1.6f, 0.18f, 0.09f);
 
     // ramen shop with low angled canopy
     rootNodes.push_back(SceneNode(createBox(7.5f, 6.5f, 11.0f, glm::vec3(0.22f, 0.17f, 0.16f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.25f, 3.25f, 3.0f))));
@@ -345,12 +320,8 @@ void Scene::init() {
                                  * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         rootNodes.push_back(SceneNode(ramenNeonMesh, ramenTransform, true));
     }
-    PointLight ramenLight;
-    ramenLight.position = glm::vec3(5.5f, 3.6f, 3.0f);
     glm::vec3 magentaColor(1.0f, 0.20f, 0.65f);
-    ramenLight.ambient  = magentaColor * 0.06f; ramenLight.diffuse = magentaColor * 2.2f; ramenLight.specular = magentaColor * 2.0f;
-    ramenLight.constant = 1.0f; ramenLight.linear = 0.18f; ramenLight.quadratic = 0.09f;
-    pointLights.push_back(ramenLight);
+    addPoint(glm::vec3(5.5f, 3.6f, 3.0f), magentaColor, 0.06f, 2.2f, 2.0f, 0.18f, 0.09f);
 
     // commercial buildings with 3D bar and hotel neon signs
     auto barBuilding = createBox(7.5f, 9.5f, 16.0f, glm::vec3(0.16f, 0.17f, 0.20f));
@@ -361,12 +332,8 @@ void Scene::init() {
                                * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         rootNodes.push_back(SceneNode(barNeonMesh, barTransform, true));
     }
-    PointLight barLight;
-    barLight.position = glm::vec3(-5.5f, 3.4f, -22.0f);
     glm::vec3 cyanBarColor(0.0f, 0.95f, 1.0f);
-    barLight.ambient  = cyanBarColor * 0.06f; barLight.diffuse = cyanBarColor * 2.2f; barLight.specular = cyanBarColor * 2.0f;
-    barLight.constant = 1.0f; barLight.linear = 0.18f; barLight.quadratic = 0.09f;
-    pointLights.push_back(barLight);
+    addPoint(glm::vec3(-5.5f, 3.4f, -22.0f), cyanBarColor, 0.06f, 2.2f, 2.0f, 0.18f, 0.09f);
 
     auto hotelBuilding = createBox(7.5f, 9.0f, 16.0f, glm::vec3(0.20f, 0.18f, 0.16f));
     rootNodes.push_back(SceneNode(hotelBuilding, glm::translate(glm::mat4(1.0f), glm::vec3(10.25f, 4.5f, -22.0f))));
@@ -396,12 +363,7 @@ void Scene::init() {
         armLNode.addChild(SceneNode(cyanFixtureMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.15f, 0.0f)), true));
         poleLNode.addChild(armLNode);
         rootNodes.push_back(poleLNode);
-
-        PointLight plL;
-        plL.position = glm::vec3(-3.2f, 4.2f, z);
-        plL.ambient  = cyanLightColor * 0.05f; plL.diffuse = cyanLightColor * 1.3f; plL.specular = cyanLightColor * 1.2f;
-        plL.constant = 1.0f; plL.linear = 0.14f; plL.quadratic = 0.07f;
-        pointLights.push_back(plL);
+        addPoint(glm::vec3(-3.2f, 4.2f, z), cyanLightColor, 0.05f, 1.3f, 1.2f, 0.14f, 0.07f);
     }
     for (float z : rightLampZ) {
         glm::mat4 poleR = glm::translate(glm::mat4(1.0f), glm::vec3(4.2f, 2.25f, z));
@@ -411,13 +373,10 @@ void Scene::init() {
         armRNode.addChild(SceneNode(amberFixtureMesh, glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.15f, 0.0f)), true));
         poleRNode.addChild(armRNode);
         rootNodes.push_back(poleRNode);
-
-        PointLight plR;
-        plR.position = glm::vec3(3.2f, 4.2f, z);
-        plR.ambient  = amberLightColor * 0.05f; plR.diffuse = amberLightColor * 1.3f; plR.specular = amberLightColor * 1.2f;
-        plR.constant = 1.0f; plR.linear = 0.14f; plR.quadratic = 0.07f;
-        pointLights.push_back(plR);
+        addPoint(glm::vec3(3.2f, 4.2f, z), amberLightColor, 0.05f, 1.3f, 1.2f, 0.14f, 0.07f);
     }
+
+    createSkyscrapers();
 }
 
 void Scene::setupLights(const Shader& shader) {
@@ -429,13 +388,14 @@ void Scene::setupLights(const Shader& shader) {
     for (size_t i = 0; i < 16; ++i) {
         std::string prefix = "pointLights[" + std::to_string(i) + "].";
         if (i < pointLights.size()) {
-            shader.setVec3(prefix + "position", pointLights[i].position);
-            shader.setVec3(prefix + "ambient", pointLights[i].ambient);
-            shader.setVec3(prefix + "diffuse", pointLights[i].diffuse);
-            shader.setVec3(prefix + "specular", pointLights[i].specular);
-            shader.setFloat(prefix + "constant", pointLights[i].constant);
-            shader.setFloat(prefix + "linear", pointLights[i].linear);
-            shader.setFloat(prefix + "quadratic", pointLights[i].quadratic);
+            const auto& pl = pointLights[i];
+            shader.setVec3(prefix + "position", pl.position);
+            shader.setVec3(prefix + "ambient", pl.ambient);
+            shader.setVec3(prefix + "diffuse", pl.diffuse);
+            shader.setVec3(prefix + "specular", pl.specular);
+            shader.setFloat(prefix + "constant", pl.constant);
+            shader.setFloat(prefix + "linear", pl.linear);
+            shader.setFloat(prefix + "quadratic", pl.quadratic);
         } else {
             shader.setVec3(prefix + "position", glm::vec3(0.0f, -100.0f, 0.0f));
             shader.setVec3(prefix + "ambient", glm::vec3(0.0f));
@@ -451,5 +411,89 @@ void Scene::setupLights(const Shader& shader) {
 void Scene::render(const Shader& shader) {
     for (const auto& node : rootNodes) {
         node.draw(shader);
+    }
+}
+
+void Scene::createSkyscrapers() {
+    struct TowerDef {
+        glm::vec3 pos;
+        float w, h, d;
+        int dir;
+    };
+
+    std::vector<TowerDef> towers = {
+        { {-26.0f, 22.0f, -56.0f}, 18.0f, 44.0f, 16.0f, 0 }, { { -8.0f, 29.0f, -64.0f}, 16.0f, 58.0f, 16.0f, 0 },
+        { { 10.0f, 25.0f, -58.0f}, 18.0f, 50.0f, 18.0f, 0 }, { { 28.0f, 20.0f, -52.0f}, 16.0f, 40.0f, 16.0f, 0 },
+        { {-24.0f, 24.0f,  38.0f}, 16.0f, 48.0f, 16.0f, 1 }, { { -6.0f, 20.0f,  35.0f}, 18.0f, 40.0f, 16.0f, 1 },
+        { { 12.0f, 26.0f,  40.0f}, 16.0f, 52.0f, 18.0f, 1 }, { { 30.0f, 21.0f,  36.0f}, 18.0f, 42.0f, 16.0f, 1 },
+        { { 36.0f, 22.0f, -24.0f}, 16.0f, 44.0f, 18.0f, 2 }, { { 38.0f, 28.0f,  -8.0f}, 16.0f, 56.0f, 16.0f, 2 },
+        { { 35.0f, 19.0f,   8.0f}, 16.0f, 38.0f, 18.0f, 2 }, { {-36.0f, 23.0f, -24.0f}, 16.0f, 46.0f, 18.0f, 3 },
+        { {-38.0f, 28.0f,  -8.0f}, 16.0f, 56.0f, 16.0f, 3 }, { {-34.0f, 18.0f,   8.0f}, 16.0f, 36.0f, 18.0f, 3 }
+    };
+
+    glm::vec3 towerColor(0.12f, 0.13f, 0.16f);
+    glm::vec3 redBeacon(1.0f, 0.15f, 0.15f);
+    auto beaconMesh = createBox(0.6f, 0.6f, 0.6f, redBeacon);
+
+    std::vector<Vertex> litVerts, unlitVerts;
+    std::vector<unsigned int> litIdxs, unlitIdxs;
+
+    auto addQuad = [](std::vector<Vertex>& verts, std::vector<unsigned int>& idxs,
+                      const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3,
+                      const glm::vec3& norm, const glm::vec3& col) {
+        unsigned int b = static_cast<unsigned int>(verts.size());
+        verts.push_back({ p0, norm, col, glm::vec2(0.0f, 0.0f) });
+        verts.push_back({ p1, norm, col, glm::vec2(1.0f, 0.0f) });
+        verts.push_back({ p2, norm, col, glm::vec2(1.0f, 1.0f) });
+        verts.push_back({ p3, norm, col, glm::vec2(0.0f, 1.0f) });
+        idxs.push_back(b); idxs.push_back(b + 1); idxs.push_back(b + 2);
+        idxs.push_back(b); idxs.push_back(b + 2); idxs.push_back(b + 3);
+    };
+
+    for (size_t i = 0; i < towers.size(); ++i) {
+        const auto& t = towers[i];
+        rootNodes.push_back(SceneNode(createBox(t.w, t.h, t.d, towerColor), glm::translate(glm::mat4(1.0f), t.pos)));
+        rootNodes.push_back(SceneNode(beaconMesh, glm::translate(glm::mat4(1.0f), glm::vec3(t.pos.x, t.h + 0.3f, t.pos.z)), true));
+
+        float span = (t.dir < 2) ? t.w : t.d;
+        int cols = static_cast<int>(span / 2.6f);
+        int floors = static_cast<int>((t.h - 8.0f) / 2.8f);
+
+        for (int c = 0; c < cols; ++c) {
+            float u = -span * 0.5f + 1.6f + c * 2.6f;
+            for (int r = 0; r < floors; ++r) {
+                float y = 5.0f + r * 2.8f;
+                float val = std::fmod(std::abs(std::sin((c + 1) * 12.9898f + (r + 1) * 78.233f + (i + 1) * 37.719f) * 43758.5453f), 1.0f);
+
+                bool isLit = (val > 0.68f);
+                glm::vec3 col = isLit 
+                    ? (val > 0.88f ? glm::vec3(0.32f, 0.35f, 0.38f) : (val > 0.78f ? glm::vec3(0.38f, 0.32f, 0.22f) : glm::vec3(0.40f, 0.36f, 0.28f)))
+                    : glm::vec3(0.04f, 0.04f, 0.05f);
+
+                auto& targetV = isLit ? litVerts : unlitVerts;
+                auto& targetI = isLit ? litIdxs : unlitIdxs;
+
+                if (t.dir == 0) {
+                    float z = t.pos.z + t.d * 0.5f + 0.05f, x0 = t.pos.x + u;
+                    addQuad(targetV, targetI, {x0, y, z}, {x0 + 1.2f, y, z}, {x0 + 1.2f, y + 1.4f, z}, {x0, y + 1.4f, z}, {0.0f, 0.0f, 1.0f}, col);
+                } else if (t.dir == 1) {
+                    float z = t.pos.z - t.d * 0.5f - 0.05f, x0 = t.pos.x + u;
+                    addQuad(targetV, targetI, {x0 + 1.2f, y, z}, {x0, y, z}, {x0, y + 1.4f, z}, {x0 + 1.2f, y + 1.4f, z}, {0.0f, 0.0f, -1.0f}, col);
+                } else if (t.dir == 2) {
+                    float x = t.pos.x - t.w * 0.5f - 0.05f, z0 = t.pos.z + u;
+                    addQuad(targetV, targetI, {x, y, z0}, {x, y, z0 + 1.2f}, {x, y + 1.4f, z0 + 1.2f}, {x, y + 1.4f, z0}, {-1.0f, 0.0f, 0.0f}, col);
+                } else {
+                    float x = t.pos.x + t.w * 0.5f + 0.05f, z0 = t.pos.z + u;
+                    addQuad(targetV, targetI, {x, y, z0 + 1.2f}, {x, y, z0}, {x, y + 1.4f, z0}, {x, y + 1.4f, z0 + 1.2f}, {1.0f, 0.0f, 0.0f}, col);
+                }
+            }
+        }
+    }
+
+    if (!litVerts.empty()) {
+        rootNodes.push_back(SceneNode(std::make_shared<Mesh>(litVerts, litIdxs), glm::mat4(1.0f), true));
+    }
+    if (!unlitVerts.empty()) {
+        rootNodes.push_back(SceneNode(std::make_shared<Mesh>(unlitVerts, unlitIdxs), glm::mat4(1.0f), false));
     }
 }

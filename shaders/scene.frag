@@ -24,10 +24,26 @@ struct PointLight {
     float quadratic;
 };
 
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+    float cutOff;
+    float outerCutOff;
+    bool enabled;
+};
+
 #define NR_POINT_LIGHTS 16
 
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform SpotLight spotLight;
 uniform vec3 viewPos;
 
 uniform sampler2D diffuseTexture;
@@ -64,6 +80,7 @@ float fbm(vec2 p) {
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength);
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength);
 
 void main() {
     if (isEmissive) {
@@ -88,28 +105,20 @@ void main() {
     float specularStrength = 0.3;
 
     if (isRoad) {
-        // Procedural world-space noise: completely non-repeating across the 60m street!
-        // At frequency 0.16, puddles naturally form in 2 to 4 meter irregular organic patches
         float n = fbm(FragPos.xz * 0.16 + vec2(4.2, 1.7));
-
-        // Smooth transition: dry pavement -> damp dark asphalt -> mirror puddle pool
-        puddleMask = smoothstep(0.46, 0.58, n);
-
-        // Wet asphalt absorbs more light: darken surface inside puddles
+        puddleMask = smoothstep(0.24, 0.42, n);
         baseColor = mix(baseColor, baseColor * 0.35, puddleMask);
-
-        // Deep water pool: razor-sharp specular shine reflecting streetlamps
         shininess = mix(24.0, 128.0, puddleMask);
         specularStrength = mix(0.25, 3.5, puddleMask);
     }
 
-    // 1. Directional Moonlight (subtle dark ambient fill)
     vec3 result = CalcDirLight(dirLight, norm, viewDir, baseColor, shininess, specularStrength);
 
-    // 2. Point lights (8+ colored lights)
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, baseColor, shininess, specularStrength);
     }
+
+    result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, shininess, specularStrength);
 
     FragColor = vec4(result, 1.0);
 }
@@ -146,6 +155,42 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     vec3 ambient  = light.ambient  * baseColor;
     vec3 diffuse  = light.diffuse  * diff * baseColor;
     vec3 specular = light.specular * spec * specularStrength;
+
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    return (ambient + diffuse + specular);
+}
+
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength) {
+    if (!light.enabled) {
+        return vec3(0.0);
+    }
+    vec3 lightVec = light.position - fragPos;
+    float distance = length(lightVec);
+    if (distance > 24.0) {
+        return vec3(0.0);
+    }
+    vec3 lightDir = lightVec / distance;
+
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    if (intensity <= 0.0) {
+        return vec3(0.0);
+    }
+
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+    vec3 effectiveColor = max(baseColor, vec3(0.18));
+    vec3 ambient  = light.ambient  * baseColor;
+    vec3 diffuse  = light.diffuse  * max(diff, 0.30) * effectiveColor * intensity;
+    vec3 specular = light.specular * spec * specularStrength * intensity;
 
     ambient  *= attenuation;
     diffuse  *= attenuation;

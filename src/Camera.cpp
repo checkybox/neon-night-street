@@ -85,14 +85,14 @@ void Camera::clampToBounds() {
 
     // static building, dumpster and wall obstacle bounds
     static const std::vector<AABB> boxes = {
-        // northwest building
-        { -15.0f, -6.2f, -40.0f, -13.0f },
-        // northeast building
-        { 6.2f, 15.0f, -40.0f, -13.0f },
-        // southeast ramen shop
-        { 6.2f, 15.0f, -2.5f, 9.0f },
+        // northwest building and perimeter
+        { -25.0f, -6.2f, -40.0f, -13.0f },
+        // northeast building and perimeter
+        { 6.2f, 25.0f, -40.0f, -13.0f },
+        // southeast commercial block
+        { 6.2f, 25.0f, -2.5f, 18.0f },
         // southwest konbini main body and inset columns
-        { -14.0f, -7.0f, -2.5f, 8.5f },
+        { -25.0f, -7.0f, -2.5f, 8.5f },
         { -7.0f, -6.3f, -2.5f, -0.4f },
         { -7.0f, -6.3f, 6.4f, 8.5f },
         // parking lot rear wall and south divider

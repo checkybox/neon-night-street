@@ -21,6 +21,8 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 bool cursorLocked = true;
+bool flashlightOn = false;
+float flashlightBrightness = 1.0f;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -64,6 +66,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         } else {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_F) {
+        flashlightOn = !flashlightOn;
+    }
+    if (action == GLFW_PRESS && (key == GLFW_KEY_LEFT_BRACKET || key == GLFW_KEY_MINUS)) {
+        flashlightBrightness = std::max(0.4f, flashlightBrightness - 0.3f);
+    }
+    if (action == GLFW_PRESS && (key == GLFW_KEY_RIGHT_BRACKET || key == GLFW_KEY_EQUAL)) {
+        flashlightBrightness = std::min(3.0f, flashlightBrightness + 0.3f);
     }
 }
 
@@ -174,6 +185,20 @@ int main() {
 
         sceneShader.use();
         sceneShader.setVec3("viewPos", camera.Position);
+
+        sceneShader.setBool("spotLight.enabled", flashlightOn);
+        if (flashlightOn) {
+            sceneShader.setVec3("spotLight.position", camera.Position);
+            sceneShader.setVec3("spotLight.direction", camera.Front);
+            sceneShader.setVec3("spotLight.ambient", glm::vec3(0.0f));
+            sceneShader.setVec3("spotLight.diffuse", glm::vec3(1.0f, 0.98f, 0.92f) * (3.8f * flashlightBrightness));
+            sceneShader.setVec3("spotLight.specular", glm::vec3(1.0f, 0.98f, 0.92f) * (3.0f * flashlightBrightness));
+            sceneShader.setFloat("spotLight.constant", 1.0f);
+            sceneShader.setFloat("spotLight.linear", 0.09f);
+            sceneShader.setFloat("spotLight.quadratic", 0.032f);
+            sceneShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+            sceneShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+        }
 
         glm::mat4 view = camera.GetViewMatrix();
         float aspect = (currentFbHeight > 0) 
