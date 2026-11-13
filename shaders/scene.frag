@@ -50,6 +50,7 @@ uniform sampler2D diffuseTexture;
 uniform bool hasTexture;
 uniform bool isRoad;
 uniform bool isEmissive;
+uniform bool fogEnabled;
 
 // Procedural 2D Noise & FBM for Organic Puddles
 float hash(vec2 p) {
@@ -83,10 +84,17 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength);
 
 void main() {
+    vec3 fogColor = vec3(0.02, 0.025, 0.045);
+    float dist = length(viewPos - FragPos);
+
     if (isEmissive) {
-        vec3 col = vertexColor;
+        vec3 col = vertexColor * 1.25;
         if (hasTexture) {
-            col = texture(diffuseTexture, TexCoords).rgb;
+            col = texture(diffuseTexture, TexCoords).rgb * 1.2;
+        }
+        if (fogEnabled) {
+            float fogFactor = clamp(1.0 - exp(-dist * 0.008), 0.0, 0.70);
+            col = mix(col, fogColor, fogFactor);
         }
         FragColor = vec4(col, 1.0);
         return;
@@ -120,6 +128,11 @@ void main() {
 
     result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, shininess, specularStrength);
 
+    if (fogEnabled) {
+        float fogFactor = clamp(1.0 - exp(-dist * 0.024), 0.0, 0.95);
+        result = mix(result, fogColor, fogFactor);
+    }
+
     FragColor = vec4(result, 1.0);
 }
 
@@ -139,13 +152,16 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 baseColor, flo
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength) {
     vec3 lightVec = light.position - fragPos;
-    float distance = length(lightVec);
-    // Early cutoff: Skip expensive lighting calculations if fragment is beyond reach
-    if (distance > 24.0) {
+    float distSq = dot(lightVec, lightVec);
+    if (distSq > 361.0) {
         return vec3(0.0);
     }
+    float distance = sqrt(distSq);
     vec3 lightDir = lightVec / distance;
     float diff = max(dot(normal, lightDir), 0.0);
+    if (diff <= 0.0) {
+        return vec3(0.0);
+    }
 
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);

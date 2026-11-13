@@ -49,7 +49,6 @@ private:
     std::shared_ptr<Mesh> createPlane(float width, float depth, const glm::vec3& color, float tileX = 1.0f, float tileY = 1.0f);
     std::shared_ptr<Mesh> createCylinder(float radius, float height, int segments, const glm::vec3& color, bool capEnds = true);
     std::shared_ptr<Mesh> createCornerCurb(float centerX, float centerZ, float radius, float startAngleRad, float endAngleRad, float innerX, float innerZ, float height, int segments, const glm::vec3& color);
-    void createSkyscrapers();
 };
 
 #endif

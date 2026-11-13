@@ -23,6 +23,7 @@ bool firstMouse = true;
 bool cursorLocked = true;
 bool flashlightOn = false;
 float flashlightBrightness = 1.0f;
+bool fogEnabled = true;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -70,6 +71,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action == GLFW_PRESS && key == GLFW_KEY_F) {
         flashlightOn = !flashlightOn;
     }
+    if (action == GLFW_PRESS && key == GLFW_KEY_G) {
+        fogEnabled = !fogEnabled;
+    }
     if (action == GLFW_PRESS && (key == GLFW_KEY_LEFT_BRACKET || key == GLFW_KEY_MINUS)) {
         flashlightBrightness = std::max(0.4f, flashlightBrightness - 0.3f);
     }
@@ -81,6 +85,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        camera.MovementSpeed = 8.5f;
+    } else {
+        camera.MovementSpeed = SPEED;
+    }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -185,6 +195,7 @@ int main() {
 
         sceneShader.use();
         sceneShader.setVec3("viewPos", camera.Position);
+        sceneShader.setBool("fogEnabled", fogEnabled);
 
         sceneShader.setBool("spotLight.enabled", flashlightOn);
         if (flashlightOn) {

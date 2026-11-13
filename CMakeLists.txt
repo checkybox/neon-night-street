@@ -15,6 +15,8 @@ add_executable(${PROJECT_NAME}
     src/Camera.cpp
     src/Texture.cpp
     src/Model.cpp
+    src/CityBuilder.cpp
+    src/AlleyBuilder.cpp
 )
 
 if(WIN32)

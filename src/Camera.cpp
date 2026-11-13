@@ -79,31 +79,50 @@ void Camera::clampToBounds() {
 
     // hard perimeter boundaries
     Position.x = std::max(-18.0f, std::min(18.0f, Position.x));
-    Position.z = std::max(-37.5f, std::min(17.5f, Position.z));
+    Position.z = std::max(-73.0f, std::min(43.0f, Position.z));
 
     const float r = 0.35f;
 
     // static building, dumpster and wall obstacle bounds
     static const std::vector<AABB> boxes = {
-        // northwest building and perimeter
-        { -25.0f, -6.2f, -40.0f, -13.0f },
-        // northeast building and perimeter
-        { 6.2f, 25.0f, -40.0f, -13.0f },
-        // southeast commercial block
-        { 6.2f, 25.0f, -2.5f, 18.0f },
-        // southwest konbini main body and inset columns
+        // north avenue east corridor with walkable alley 1
+        {  6.2f, 25.0f, -75.0f, -46.0f },
+        { 13.5f, 25.0f, -46.0f, -43.5f },
+        {  6.2f, 25.0f, -43.5f, -13.0f },
+        // north avenue west corridor with walkable alley 2 and parking alcove
+        { -25.0f, -6.2f, -75.0f, -46.0f },
+        { -25.0f, -13.5f, -46.0f, -43.5f },
+        { -25.0f, -6.2f, -43.5f, -36.0f },
+        { -25.0f, -8.5f, -36.0f, -30.0f },
+        { -25.0f, -6.2f, -30.0f, -13.0f },
+        // south avenue east corridor with walkable alley 3
+        {  6.2f, 25.0f, -2.5f, 8.5f },
+        { 13.5f, 25.0f,  8.5f, 11.2f },
+        {  6.2f, 25.0f, 11.2f, 45.0f },
+        // south avenue west corridor
         { -25.0f, -7.0f, -2.5f, 8.5f },
         { -7.0f, -6.3f, -2.5f, -0.4f },
         { -7.0f, -6.3f, 6.4f, 8.5f },
-        // parking lot rear wall and south divider
         { -14.0f, -11.5f, 8.5f, 18.0f },
-        { -14.0f, -4.0f, 17.5f, 20.0f },
-        // west alley dumpster, back wall and cardboard crate
+        { -25.0f, -6.2f, 18.0f, 45.0f },
+        // alley 1 trash pile and boxes
+        {   7.8f,   9.6f, -45.7f, -44.8f },
+        {  10.6f,  12.6f, -45.1f, -44.0f },
+        // alley 2 dumpster, trash bags and boxes
+        { -12.5f, -10.5f, -45.7f, -43.8f },
+        {  -9.8f,  -8.3f, -45.6f, -44.1f },
+        {  -8.6f,  -7.5f, -45.5f, -44.6f },
+        // alley 3 trash bags and crates
+        {   8.2f,  11.2f,   9.1f,   9.8f },
+        // west crossroad alley dumpster and crate
         { -19.5f, -18.0f, -13.0f, -3.0f },
         { -18.2f, -16.2f, -9.5f, -6.5f },
         { -17.8f, -16.6f, -6.6f, -5.4f },
         // vending machines against alley wall
-        { -10.4f, -7.5f, -3.7f, -2.5f }
+        { -10.4f, -7.5f, -3.7f, -2.5f },
+        // sidewalk obstacle props on extended avenue
+        {  4.2f,  5.0f, -49.6f, -48.4f },
+        { -5.0f, -4.2f,  37.4f,  38.6f }
     };
 
     for (const auto& b : boxes) {
