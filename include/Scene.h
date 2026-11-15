@@ -44,6 +44,7 @@ private:
     std::vector<PointLight> pointLights;
 
     std::shared_ptr<Texture> asphaltTex;
+    std::shared_ptr<Texture> moonTex;
 
     std::shared_ptr<Mesh> createBox(float width, float height, float depth, const glm::vec3& color);
     std::shared_ptr<Mesh> createPlane(float width, float depth, const glm::vec3& color, float tileX = 1.0f, float tileY = 1.0f);

@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
     src/Model.cpp
     src/CityBuilder.cpp
     src/AlleyBuilder.cpp
+    src/ShopBuilder.cpp
 )
 
 if(WIN32)

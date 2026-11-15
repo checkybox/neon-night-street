@@ -215,7 +215,7 @@ int main() {
         float aspect = (currentFbHeight > 0) 
             ? static_cast<float>(currentFbWidth) / static_cast<float>(currentFbHeight) 
             : 16.0f / 9.0f;
-        glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 150.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 600.0f);
 
         sceneShader.setMat4("view", view);
         sceneShader.setMat4("projection", projection);

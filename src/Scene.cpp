@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "CityBuilder.h"
 #include "AlleyBuilder.h"
+#include "ShopBuilder.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <cmath>
@@ -156,24 +157,22 @@ void Scene::init() {
     pointLights.clear();
 
     asphaltTex = std::make_shared<Texture>("assets/textures/asphalt.png", true);
+    moonTex    = std::make_shared<Texture>("assets/textures/moon.jpg", true);
 
     dirLight.direction = glm::vec3(-0.4f, -0.65f, -0.4f);
     dirLight.ambient   = glm::vec3(0.04f, 0.05f, 0.08f);
     dirLight.diffuse   = glm::vec3(0.12f, 0.14f, 0.20f);
     dirLight.specular  = glm::vec3(0.15f, 0.18f, 0.25f);
 
-    // continuous base foundation ground plane
     auto baseGround = createPlane(60.0f, 80.0f, glm::vec3(0.12f), 24.0f, 32.0f);
     rootNodes.push_back(SceneNode(baseGround, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f)), false, true, asphaltTex));
 
-    // center lane stripes
     auto stripeMesh = createPlane(0.2f, 2.0f, glm::vec3(0.9f, 0.8f, 0.2f));
     for (float z = -36.0f; z <= -15.0f; z += 5.0f)
         rootNodes.push_back(SceneNode(stripeMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z))));
     for (float z = -1.0f; z <= 18.0f; z += 5.0f)
         rootNodes.push_back(SceneNode(stripeMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z))));
 
-    // pedestrian zebra crossings inset inside each street approach
     auto zStripeN_S = createPlane(0.5f, 2.0f, glm::vec3(0.82f));
     auto zStripeW_E = createPlane(2.0f, 0.5f, glm::vec3(0.82f));
     for (float x = -3.0f; x <= 3.0f; x += 1.0f) {
@@ -185,12 +184,9 @@ void Scene::init() {
         rootNodes.push_back(SceneNode(zStripeW_E, glm::translate(glm::mat4(1.0f), glm::vec3( 6.5f, 0.006f, z))));
     }
 
-    // straight sidewalk segments
     glm::vec3 curbColor(0.22f, 0.22f, 0.24f);
     rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 27.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.1f, -26.5f))));
     rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-11.75f, 0.1f, -12.6f))));
-
-    // konbini front sidewalk extended flush to recessed storefront
     rootNodes.push_back(SceneNode(createBox(3.1f, 0.2f, 11.5f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.55f, 0.1f, 2.75f))));
     rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-11.75f, 0.1f, -3.4f))));
 
@@ -199,17 +195,14 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 21.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(5.1f, 0.1f, 7.5f))));
     rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(11.75f, 0.1f, -3.4f))));
 
-    // curved rounded curb transitions connecting each corner
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -3.0f, 1.5f, 0.0f, -1.5707963f, -6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -13.0f, 1.5f, 1.5707963f, 0.0f, -6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -3.0f, 1.5f, -1.5707963f, -3.14159265f, 6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -13.0f, 1.5f, 3.14159265f, 1.5707963f, 6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
 
-    // parking lot with lowered driveway ramp curb
     rootNodes.push_back(SceneNode(createBox(2.2f, 0.03f, 5.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.015f, 11.0f))));
     rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 4.5f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.1f, 15.75f))));
 
-    // parking bays with dual boundary lines and wheel stops
     auto parkLine = createPlane(4.5f, 0.12f, glm::vec3(0.9f, 0.8f, 0.2f));
     auto wheelStop = createBox(0.25f, 0.14f, 1.8f, glm::vec3(0.9f, 0.75f, 0.12f));
     for (float pz : { 9.0f, 11.6f, 14.2f, 16.8f })
@@ -219,17 +212,14 @@ void Scene::init() {
 
     rootNodes.push_back(SceneNode(createBox(0.4f, 2.5f, 9.5f, glm::vec3(0.20f, 0.20f, 0.22f)), glm::translate(glm::mat4(1.0f), glm::vec3(-12.2f, 1.25f, 13.0f))));
 
-    // street roadblocks and dead-end barriers
     auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
     rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 0.5f, -8.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))));
     rootNodes.push_back(SceneNode(createBox(0.4f, 6.0f, 8.0f, glm::vec3(0.18f, 0.17f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-18.5f, 3.0f, -8.0f))));
 
-    // perimeter security walls sealing backstage light bleeds behind buildings
     auto fenceWall = createBox(0.3f, 4.0f, 26.0f, glm::vec3(0.16f, 0.16f, 0.18f));
     rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3( 14.5f, 2.0f, -26.0f))));
     rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3(-14.5f, 2.0f, -26.0f))));
 
-    // west alley metal dumpster, crate and alley lamp
     rootNodes.push_back(SceneNode(createBox(1.6f, 1.2f, 2.4f, glm::vec3(0.16f, 0.25f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 0.7f, -8.0f))));
     auto dumpsterLid = createBox(1.65f, 0.15f, 1.25f, glm::vec3(0.09f, 0.09f, 0.11f));
     rootNodes.push_back(SceneNode(dumpsterLid, glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 1.35f, -8.6f))));
@@ -247,12 +237,10 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(createBox(5.8f, 5.2f, 11.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 2.6f, 3.0f))));
     rootNodes.push_back(SceneNode(createBox(6.0f, 0.35f, 11.2f, glm::vec3(0.18f, 0.17f, 0.16f)), glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 5.35f, 3.0f))));
 
-    // side pillars and lintel flush at height 3.2m
     rootNodes.push_back(SceneNode(createBox(0.6f, 3.2f, 2.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 1.6f, -1.5f))));
     rootNodes.push_back(SceneNode(createBox(0.6f, 3.2f, 2.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 1.6f,  7.5f))));
     rootNodes.push_back(SceneNode(createBox(0.6f, 0.8f, 7.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 2.8f,  3.0f))));
 
-    // service ladder on rear alley side
     auto ladderRail = createCylinder(0.02f, 4.6f, 6, glm::vec3(0.2f, 0.2f, 0.22f), true);
     rootNodes.push_back(SceneNode(ladderRail, glm::translate(glm::mat4(1.0f), glm::vec3(-12.8f, 2.5f, -2.0f))));
     rootNodes.push_back(SceneNode(ladderRail, glm::translate(glm::mat4(1.0f), glm::vec3(-12.8f, 2.5f, -1.6f))));
@@ -260,10 +248,8 @@ void Scene::init() {
     for (float ly = 0.6f; ly <= 4.6f; ly += 0.5f)
         rootNodes.push_back(SceneNode(ladderRung, glm::translate(glm::mat4(1.0f), glm::vec3(-12.8f, ly, -1.8f))));
 
-    // dark canopy fascia resting directly on top of the lower blocks across full span
     rootNodes.push_back(SceneNode(createBox(0.85f, 0.8f, 11.1f, glm::vec3(0.16f, 0.16f, 0.18f)), glm::translate(glm::mat4(1.0f), glm::vec3(-6.78f, 3.6f, 3.0f))));
 
-    // 3D bent tube 24/7 neon sign mounted on fascia
     auto neon24Mesh = Model::loadOBJ("assets/models/neon_sign_24_7.obj", glm::vec3(0.15f, 1.0f, 0.65f));
     if (neon24Mesh) {
         glm::mat4 neon24Tr = glm::translate(glm::mat4(1.0f), glm::vec3(-6.33f, 3.6f, 3.0f))
@@ -271,14 +257,12 @@ void Scene::init() {
         rootNodes.push_back(SceneNode(neon24Mesh, neon24Tr, true));
     }
 
-    // inset double doors and handles
     rootNodes.push_back(SceneNode(createBox(0.1f, 2.3f, 1.6f, glm::vec3(0.12f, 0.12f, 0.14f)), glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.25f, 3.0f))));
     rootNodes.push_back(SceneNode(createBox(0.04f, 2.1f, 1.4f, glm::vec3(0.35f, 0.45f, 0.50f)), glm::translate(glm::mat4(1.0f), glm::vec3(-7.09f, 1.25f, 3.0f))));
     auto doorHandle = createCylinder(0.02f, 0.6f, 8, glm::vec3(0.85f), true);
     rootNodes.push_back(SceneNode(doorHandle, glm::translate(glm::mat4(1.0f), glm::vec3(-7.02f, 1.25f, 2.85f))));
     rootNodes.push_back(SceneNode(doorHandle, glm::translate(glm::mat4(1.0f), glm::vec3(-7.02f, 1.25f, 3.15f))));
 
-    // inset display windows with ample clearance
     glm::vec3 warmStoreGlow(1.0f, 0.88f, 0.68f);
     auto windowFrame = createBox(0.12f, 2.3f, 1.9f, glm::vec3(0.14f, 0.14f, 0.16f));
     auto storeWindow = createBox(0.08f, 2.1f, 1.7f, warmStoreGlow);
@@ -286,55 +270,22 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, 1.05f)), true));
     rootNodes.push_back(SceneNode(windowFrame, glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.3f, 4.95f))));
     rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, 4.95f)), true));
-
     addPoint(glm::vec3(-5.5f, 2.0f, 3.0f), warmStoreGlow, 0.05f, 1.8f, 1.5f, 0.16f, 0.08f);
 
-    // vending machines and trash can placed on alley sidewalk
-    auto vend1Body = createBox(1.1f, 2.05f, 0.8f, glm::vec3(0.08f, 0.14f, 0.28f));
-    rootNodes.push_back(SceneNode(vend1Body, glm::translate(glm::mat4(1.0f), glm::vec3(-8.2f, 1.125f, -3.1f))));
-    auto vend1Panel = createBox(0.9f, 1.3f, 0.05f, glm::vec3(0.92f, 0.98f, 1.0f));
-    rootNodes.push_back(SceneNode(vend1Panel, glm::translate(glm::mat4(1.0f), glm::vec3(-8.2f, 1.35f, -3.52f)), true));
-
-    auto vend2Body = createBox(1.1f, 2.05f, 0.8f, glm::vec3(0.38f, 0.09f, 0.12f));
-    rootNodes.push_back(SceneNode(vend2Body, glm::translate(glm::mat4(1.0f), glm::vec3(-9.6f, 1.125f, -3.1f))));
-    auto vend2Panel = createBox(0.9f, 1.3f, 0.05f, glm::vec3(1.0f, 0.94f, 0.92f));
-    rootNodes.push_back(SceneNode(vend2Panel, glm::translate(glm::mat4(1.0f), glm::vec3(-9.6f, 1.35f, -3.52f)), true));
-
+    // detailed vending machines in the konbini alley alcove
+    ShopBuilder::buildDetailedVendingMachine(rootNodes, glm::vec3(-8.2f, 0.0f, -3.1f), 180.0f, glm::vec3(0.08f, 0.14f, 0.28f));
+    ShopBuilder::buildDetailedVendingMachine(rootNodes, glm::vec3(-9.6f, 0.0f, -3.1f), 180.0f, glm::vec3(0.38f, 0.09f, 0.12f));
     auto trashCan = createCylinder(0.26f, 1.1f, 16, glm::vec3(0.12f, 0.32f, 0.18f), true);
     rootNodes.push_back(SceneNode(trashCan, glm::translate(glm::mat4(1.0f), glm::vec3(-10.8f, 0.65f, -3.1f))));
+    addPoint(glm::vec3(-8.9f, 1.5f, -3.8f), glm::vec3(0.85f, 0.95f, 1.0f), 0.04f, 1.9f, 1.6f, 0.18f, 0.09f);
 
-    glm::vec3 vendColor(0.85f, 0.95f, 1.0f);
-    addPoint(glm::vec3(-8.9f, 1.5f, -4.2f), vendColor, 0.04f, 1.9f, 1.6f, 0.18f, 0.09f);
+    // Ramen shop recessed dining nook
+    ShopBuilder::buildRamenShop(rootNodes, pointLights);
 
-    // ramen shop with low angled canopy
-    rootNodes.push_back(SceneNode(createBox(7.5f, 6.5f, 11.0f, glm::vec3(0.22f, 0.17f, 0.16f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.25f, 3.25f, 3.0f))));
-    rootNodes.push_back(SceneNode(createBox(0.1f, 2.2f, 1.6f, glm::vec3(0.15f, 0.12f, 0.10f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.2f, 3.0f))));
-    auto ramenAwning = createBox(0.8f, 0.12f, 4.5f, glm::vec3(0.25f, 0.08f, 0.08f));
-    glm::mat4 awningTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.25f, 2.45f, 3.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    rootNodes.push_back(SceneNode(ramenAwning, awningTr));
+    // Bar & Lounge facade detailing
+    ShopBuilder::buildBarFacade(rootNodes, pointLights);
 
-    // 3D katakana neon sign mounted with wall brackets above the awning
-    auto ramenNeonMesh = Model::loadOBJ("assets/models/neon_sign_ramen.obj", glm::vec3(1.0f, 0.22f, 0.70f));
-    if (ramenNeonMesh) {
-        glm::mat4 ramenTransform = glm::translate(glm::mat4(1.0f), glm::vec3(6.42f, 3.6f, 3.0f))
-                                 * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(ramenNeonMesh, ramenTransform, true));
-    }
-    glm::vec3 magentaColor(1.0f, 0.20f, 0.65f);
-    addPoint(glm::vec3(5.5f, 3.6f, 3.0f), magentaColor, 0.06f, 2.2f, 2.0f, 0.18f, 0.09f);
-
-    // commercial buildings with 3D bar and hotel neon signs
-    auto barBuilding = createBox(7.5f, 9.5f, 16.0f, glm::vec3(0.16f, 0.17f, 0.20f));
-    rootNodes.push_back(SceneNode(barBuilding, glm::translate(glm::mat4(1.0f), glm::vec3(-10.25f, 4.75f, -22.0f))));
-    auto barNeonMesh = Model::loadOBJ("assets/models/neon_sign_bar.obj", glm::vec3(0.0f, 0.95f, 1.0f));
-    if (barNeonMesh) {
-        glm::mat4 barTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-6.42f, 3.4f, -22.0f))
-                               * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(barNeonMesh, barTransform, true));
-    }
-    glm::vec3 cyanBarColor(0.0f, 0.95f, 1.0f);
-    addPoint(glm::vec3(-5.5f, 3.4f, -22.0f), cyanBarColor, 0.06f, 2.2f, 2.0f, 0.18f, 0.09f);
-
+    // Hotel building (East side)
     auto hotelBuilding = createBox(7.5f, 9.0f, 16.0f, glm::vec3(0.20f, 0.18f, 0.16f));
     rootNodes.push_back(SceneNode(hotelBuilding, glm::translate(glm::mat4(1.0f), glm::vec3(10.25f, 4.5f, -22.0f))));
     auto hotelNeonMesh = Model::loadOBJ("assets/models/neon_sign_hotel.obj", glm::vec3(1.0f, 0.65f, 0.15f));
@@ -344,7 +295,7 @@ void Scene::init() {
         rootNodes.push_back(SceneNode(hotelNeonMesh, hotelTransform, true));
     }
 
-    // sidewalk streetlamps: moved lamp in front of entrance to Z = -1.0 on both sides
+    // Streetlamps
     auto poleMesh = createBox(0.2f, 4.5f, 0.2f, glm::vec3(0.2f, 0.2f, 0.22f));
     auto armMesh  = createBox(1.2f, 0.15f, 0.15f, glm::vec3(0.25f, 0.25f, 0.27f));
     glm::vec3 cyanLightColor(0.0f, 0.9f, 1.0f);
@@ -378,7 +329,7 @@ void Scene::init() {
 
     CityBuilder::buildExtendedStreet(rootNodes, pointLights, asphaltTex);
     AlleyBuilder::buildAlleys(rootNodes, pointLights);
-    CityBuilder::buildSkyscrapers(rootNodes);
+    CityBuilder::buildSkyscrapers(rootNodes, moonTex);
 }
 
 void Scene::setupLights(const Shader& shader) {
@@ -387,7 +338,7 @@ void Scene::setupLights(const Shader& shader) {
     shader.setVec3("dirLight.diffuse", dirLight.diffuse);
     shader.setVec3("dirLight.specular", dirLight.specular);
 
-    for (size_t i = 0; i < 16; ++i) {
+    for (size_t i = 0; i < 32; ++i) {
         std::string prefix = "pointLights[" + std::to_string(i) + "].";
         if (i < pointLights.size()) {
             const auto& pl = pointLights[i];

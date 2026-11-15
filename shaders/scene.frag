@@ -39,7 +39,7 @@ struct SpotLight {
     bool enabled;
 };
 
-#define NR_POINT_LIGHTS 16
+#define NR_POINT_LIGHTS 32
 
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
@@ -92,7 +92,7 @@ void main() {
         if (hasTexture) {
             col = texture(diffuseTexture, TexCoords).rgb * 1.2;
         }
-        if (fogEnabled) {
+        if (fogEnabled && FragPos.y < 70.0) {
             float fogFactor = clamp(1.0 - exp(-dist * 0.008), 0.0, 0.70);
             col = mix(col, fogColor, fogFactor);
         }

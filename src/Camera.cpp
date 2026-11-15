@@ -120,9 +120,9 @@ void Camera::clampToBounds() {
         { -17.8f, -16.6f, -6.6f, -5.4f },
         // vending machines against alley wall
         { -10.4f, -7.5f, -3.7f, -2.5f },
-        // sidewalk obstacle props on extended avenue
-        {  4.2f,  5.0f, -49.6f, -48.4f },
-        { -5.0f, -4.2f,  37.4f,  38.6f }
+        // facade vending machines on extended avenue
+        {  5.60f,  6.45f, -49.5f, -48.5f },
+        { -6.45f, -5.60f,  37.5f,  38.5f }
     };
 
     for (const auto& b : boxes) {
