@@ -18,6 +18,8 @@ add_executable(${PROJECT_NAME}
     src/CityBuilder.cpp
     src/AlleyBuilder.cpp
     src/ShopBuilder.cpp
+    src/Audio.cpp
+    src/Rain.cpp
 )
 
 if(WIN32)

@@ -9,6 +9,8 @@
 #include "Shader.h"
 #include "Scene.h"
 #include "Camera.h"
+#include "Audio.h"
+#include "Rain.h"
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
@@ -86,20 +88,32 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+    bool isSprinting = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+    if (isSprinting) {
         camera.MovementSpeed = 8.5f;
     } else {
         camera.MovementSpeed = SPEED;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    bool isWalking = false;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        isWalking = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        isWalking = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        isWalking = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
+        isWalking = true;
+    }
+    Audio::update(isWalking, isSprinting, deltaTime);
+    camera.update(deltaTime);
 
     float rotSpeed = 75.0f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -171,13 +185,18 @@ int main() {
     sceneShader.use();
     scene.setupLights(sceneShader);
 
+    Audio::init();
+    Rain rain(1800);
+
     double lastFpsTime = glfwGetTime();
     int frameCount = 0;
+    lastFrame = static_cast<float>(glfwGetTime());
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        if (deltaTime > 0.05f) deltaTime = 0.05f;
 
         frameCount++;
         if (currentFrame - lastFpsTime >= 0.5) {
@@ -222,10 +241,14 @@ int main() {
 
         scene.render(sceneShader);
 
+        rain.update(deltaTime, camera.Position);
+        rain.render(view, projection);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    Audio::cleanup();
     glfwTerminate();
     return 0;
 }

@@ -210,6 +210,20 @@ void Scene::init() {
     for (float pz : { 10.3f, 12.9f, 15.5f })
         rootNodes.push_back(SceneNode(wheelStop, glm::translate(glm::mat4(1.0f), glm::vec3(-11.0f, 0.07f, pz))));
 
+    auto sedanMesh = Model::loadOBJ("assets/models/car_sedan.obj", glm::vec3(0.28f, 0.35f, 0.22f));
+    if (sedanMesh) {
+        glm::mat4 sedanTr = glm::translate(glm::mat4(1.0f), glm::vec3(-9.1f, 0.0f, 10.3f))
+                          * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        rootNodes.push_back(SceneNode(sedanMesh, sedanTr, false));
+    }
+
+    auto hatchbackMesh = Model::loadOBJ("assets/models/car_hatchback.obj", glm::vec3(0.55f, 0.12f, 0.12f));
+    if (hatchbackMesh) {
+        glm::mat4 hatchTr = glm::translate(glm::mat4(1.0f), glm::vec3(-9.1f, 0.0f, 15.5f))
+                          * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        rootNodes.push_back(SceneNode(hatchbackMesh, hatchTr, false));
+    }
+
     rootNodes.push_back(SceneNode(createBox(0.4f, 2.5f, 9.5f, glm::vec3(0.20f, 0.20f, 0.22f)), glm::translate(glm::mat4(1.0f), glm::vec3(-12.2f, 1.25f, 13.0f))));
 
     auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
@@ -337,6 +351,7 @@ void Scene::setupLights(const Shader& shader) {
     shader.setVec3("dirLight.ambient", dirLight.ambient);
     shader.setVec3("dirLight.diffuse", dirLight.diffuse);
     shader.setVec3("dirLight.specular", dirLight.specular);
+    shader.setInt("activePointLights", static_cast<int>(std::min(pointLights.size(), size_t(32))));
 
     for (size_t i = 0; i < 32; ++i) {
         std::string prefix = "pointLights[" + std::to_string(i) + "].";

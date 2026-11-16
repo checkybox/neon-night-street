@@ -11,6 +11,26 @@ struct CircleObstacle {
     float x, z, radius;
 };
 
+static float getGroundHeight(float x, float z) {
+    // driveway ramp into konbini parking bay
+    if (x <= -4.0f && x >= -6.2f && z >= 8.5f && z <= 13.5f) {
+        return 0.03f;
+    }
+
+    // main avenue road carriageway
+    bool inAvenueRoad = (x > -4.0f && x < 4.0f);
+
+    // crossroad east-west street carriageway
+    bool inCrossroadRoad = (z > -11.5f && z < -4.5f);
+
+    if (inAvenueRoad || inCrossroadRoad) {
+        return 0.0f;
+    }
+
+    // sidewalks, alleys, parking bays and shop entrances
+    return 0.20f;
+}
+
 Camera::Camera(glm::vec3 position)
     : Position(position),
       Front(glm::vec3(0.0f, 0.0f, -1.0f)),
@@ -19,6 +39,7 @@ Camera::Camera(glm::vec3 position)
       Pitch(PITCH),
       MovementSpeed(SPEED),
       MouseSensitivity(SENSITIVITY) {
+    Position.y = PLAYER_HEIGHT + getGroundHeight(Position.x, Position.z);
     updateCameraVectors();
     clampToBounds();
 }
@@ -74,9 +95,23 @@ void Camera::updateCameraVectors() {
     Up    = glm::normalize(glm::cross(Right, Front));
 }
 
-void Camera::clampToBounds() {
-    Position.y = PLAYER_HEIGHT;
+void Camera::update(float deltaTime) {
+    float groundY = getGroundHeight(Position.x, Position.z);
+    float targetY = PLAYER_HEIGHT + groundY;
 
+    if (deltaTime > 0.0001f) {
+        float diff = targetY - Position.y;
+        if (std::abs(diff) < 0.002f) {
+            Position.y = targetY;
+        } else {
+            Position.y += diff * std::min(1.0f, deltaTime * 14.0f);
+        }
+    } else {
+        Position.y = targetY;
+    }
+}
+
+void Camera::clampToBounds() {
     // hard perimeter boundaries
     Position.x = std::max(-18.0f, std::min(18.0f, Position.x));
     Position.z = std::max(-73.0f, std::min(43.0f, Position.z));
@@ -93,7 +128,7 @@ void Camera::clampToBounds() {
         { -25.0f, -6.2f, -75.0f, -46.0f },
         { -25.0f, -13.5f, -46.0f, -43.5f },
         { -25.0f, -6.2f, -43.5f, -36.0f },
-        { -25.0f, -8.5f, -36.0f, -30.0f },
+        { -25.0f, -6.2f, -36.0f, -30.0f },
         { -25.0f, -6.2f, -30.0f, -13.0f },
         // south avenue east corridor with walkable alley 3
         {  6.2f, 25.0f, -2.5f, 8.5f },
@@ -122,7 +157,10 @@ void Camera::clampToBounds() {
         { -10.4f, -7.5f, -3.7f, -2.5f },
         // facade vending machines on extended avenue
         {  5.60f,  6.45f, -49.5f, -48.5f },
-        { -6.45f, -5.60f,  37.5f,  38.5f }
+        { -6.45f, -5.60f,  37.5f,  38.5f },
+        // parked vehicles in konbini parking bays
+        { -11.20f, -7.00f,   9.35f,  11.25f },
+        { -11.20f, -7.00f,  14.55f,  16.45f }
     };
 
     for (const auto& b : boxes) {
@@ -143,15 +181,26 @@ void Camera::clampToBounds() {
 
     // cylindrical obstacles: streetlamp poles and trash cans
     static const std::vector<CircleObstacle> circles = {
+        // west avenue streetlamp poles
+        { -4.2f, -64.0f, 0.40f },
+        { -4.2f, -48.0f, 0.40f },
         { -4.2f, -30.0f, 0.40f },
         { -4.2f, -18.0f, 0.40f },
         { -4.2f,  -1.0f, 0.40f },
         { -4.2f,   7.0f, 0.40f },
+        { -4.2f,  27.0f, 0.40f },
+        { -4.2f,  39.0f, 0.40f },
+        // east avenue streetlamp poles
+        {  4.2f, -64.0f, 0.40f },
+        {  4.2f, -48.0f, 0.40f },
         {  4.2f, -30.0f, 0.40f },
         {  4.2f, -18.0f, 0.40f },
         {  4.2f,  -1.0f, 0.40f },
         {  4.2f,  13.0f, 0.40f },
-        { -10.8f, -3.1f, 0.35f }
+        {  4.2f,  27.0f, 0.40f },
+        {  4.2f,  39.0f, 0.40f },
+        // trash can in konbini alley
+        { -10.8f,  -3.1f, 0.35f }
     };
 
     for (const auto& c : circles) {

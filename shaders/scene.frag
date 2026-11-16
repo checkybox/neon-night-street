@@ -43,6 +43,7 @@ struct SpotLight {
 
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform int activePointLights;
 uniform SpotLight spotLight;
 uniform vec3 viewPos;
 
@@ -122,7 +123,8 @@ void main() {
 
     vec3 result = CalcDirLight(dirLight, norm, viewDir, baseColor, shininess, specularStrength);
 
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+    int lightCount = (activePointLights > 0 && activePointLights <= NR_POINT_LIGHTS) ? activePointLights : NR_POINT_LIGHTS;
+    for (int i = 0; i < lightCount; i++) {
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, baseColor, shininess, specularStrength);
     }
 
