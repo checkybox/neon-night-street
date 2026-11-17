@@ -165,15 +165,16 @@ void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
     addBox(0.06f, 0.45f, 1.40f, glm::vec3(0.95f, 0.75f, 0.30f), glm::vec3(bX + 0.01f, 2.68f, bZ), true);
 
     // Sleek vertical cyan neon accent strips framing the portal
-    addBox(0.04f, 2.95f, 0.05f, glm::vec3(0.0f, 0.95f, 1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ - 0.78f), true);
-    addBox(0.04f, 2.95f, 0.05f, glm::vec3(0.0f, 0.95f, 1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ + 0.78f), true);
+    auto stripMesh = CityBuilder::createBox(0.04f, 2.95f, 0.05f, glm::vec3(0.0f, 0.95f, 1.0f));
+    rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ - 0.78f)), true, false, nullptr, true));
+    rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ + 0.78f)), true, false, nullptr, true));
 
     // 3D Neon "BAR" sign overhead
     auto barNeonMesh = Model::loadOBJ("assets/models/neon_sign_bar.obj", glm::vec3(0.0f, 0.95f, 1.0f));
     if (barNeonMesh) {
         glm::mat4 barTr = glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 3.55f, bZ))
                         * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(barNeonMesh, barTr, true));
+        rootNodes.push_back(SceneNode(barNeonMesh, barTr, true, false, nullptr, true));
     }
 
     pointLights.push_back({ glm::vec3(-5.5f, 3.4f, bZ), glm::vec3(0.0f, 0.95f, 1.0f) * 0.06f,

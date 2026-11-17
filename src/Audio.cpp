@@ -36,6 +36,14 @@ static float g_thunderPhase1 = 0.0f;
 static float g_thunderPhase2 = 0.0f;
 static float g_thunderTimer = 8.0f;
 
+static std::atomic<float> g_neonFlicker(1.0f);
+static std::atomic<float> g_neonSpatialGainL(0.0f);
+static std::atomic<float> g_neonSpatialGainR(0.0f);
+
+static float g_humPhase60 = 0.0f;
+static float g_humPhase120 = 0.0f;
+static float g_humPhase180 = 0.0f;
+
 static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
     (void)pDevice;
     (void)pInput;
@@ -106,6 +114,33 @@ static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pIn
             g_footstepTimeLeft -= 1.0f / 48000.0f;
         }
 
+        // 3D spatialized electrical mains hum and dielectric arc crackles
+        float flickerVal = g_neonFlicker.load();
+        float gainL = g_neonSpatialGainL.load();
+        float gainR = g_neonSpatialGainR.load();
+
+        if (gainL > 0.0005f || gainR > 0.0005f) {
+            float hum60  = std::sin(g_humPhase60) * 0.25f;
+            float hum120 = std::sin(g_humPhase120) * 0.55f;
+            float hum180 = std::sin(g_humPhase180) * 0.20f;
+            float hum = (hum60 + hum120 + hum180) * 0.45f;
+
+            float struggle = (flickerVal < 0.6f || flickerVal > 1.15f) ? 1.6f : 1.0f;
+
+            float arcCrackle = 0.0f;
+            if (flickerVal < 0.35f || flickerVal > 1.25f) {
+                arcCrackle = whiteL * 0.65f;
+            }
+
+            float buzz = (hum * struggle + arcCrackle) * 0.25f;
+            sampleL += buzz * gainL;
+            sampleR += buzz * gainR;
+
+            g_humPhase60  += 6.2831853f * 60.0f  / 48000.0f;
+            g_humPhase120 += 6.2831853f * 120.0f / 48000.0f;
+            g_humPhase180 += 6.2831853f * 180.0f / 48000.0f;
+        }
+
         out[i * 2 + 0] = sampleL;
         out[i * 2 + 1] = sampleR;
     }
@@ -169,9 +204,40 @@ void Audio::cleanup() {
     }
 }
 
-void Audio::update(bool isWalking, bool isSprinting, float deltaTime) {
+void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
+                   const glm::vec3& camPos,
+                   const glm::vec3& camFront,
+                   const glm::vec3& camRight,
+                   float neonFlicker) {
+    (void)camFront;
     g_isWalking.store(isWalking);
     g_isSprinting.store(isSprinting);
+
+    // 3D spatial audio calculations for the flickering BAR neon fixture
+    const glm::vec3 neonPos(-6.45f, 3.55f, -22.0f);
+    glm::vec3 toNeon = neonPos - camPos;
+    float dist = glm::length(toNeon);
+
+    const float maxAudibleDist = 22.0f;
+    float gain = 0.0f;
+    if (dist < maxAudibleDist) {
+        float norm = dist / maxAudibleDist;
+        gain = (1.0f - norm) * (1.0f - norm);
+    }
+
+    if (dist > 0.001f) {
+        glm::vec3 dir = toNeon / dist;
+        float pan = glm::dot(dir, camRight);
+        pan = std::max(-1.0f, std::min(1.0f, pan));
+        float gainL = gain * std::sqrt(0.5f * (1.0f - pan));
+        float gainR = gain * std::sqrt(0.5f * (1.0f + pan));
+        g_neonSpatialGainL.store(gainL);
+        g_neonSpatialGainR.store(gainR);
+    } else {
+        g_neonSpatialGainL.store(gain * 0.5f);
+        g_neonSpatialGainR.store(gain * 0.5f);
+    }
+    g_neonFlicker.store(neonFlicker);
 
     // Periodic thunder trigger
     g_thunderTimer -= deltaTime;

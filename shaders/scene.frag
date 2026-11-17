@@ -51,6 +51,8 @@ uniform sampler2D diffuseTexture;
 uniform bool hasTexture;
 uniform bool isRoad;
 uniform bool isEmissive;
+uniform bool isFlickering;
+uniform float neonFlicker;
 uniform bool fogEnabled;
 
 // Procedural 2D Noise & FBM for Organic Puddles
@@ -89,9 +91,10 @@ void main() {
     float dist = length(viewPos - FragPos);
 
     if (isEmissive) {
-        vec3 col = vertexColor * 1.25;
+        float flicker = isFlickering ? (neonFlicker > 0.0 ? neonFlicker : 1.0) : 1.0;
+        vec3 col = vertexColor * 1.25 * flicker;
         if (hasTexture) {
-            col = texture(diffuseTexture, TexCoords).rgb * 1.2;
+            col = texture(diffuseTexture, TexCoords).rgb * 1.2 * flicker;
         }
         if (fogEnabled && FragPos.y < 70.0) {
             float fogFactor = clamp(1.0 - exp(-dist * 0.008), 0.0, 0.70);

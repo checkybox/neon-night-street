@@ -26,6 +26,8 @@ bool cursorLocked = true;
 bool flashlightOn = false;
 float flashlightBrightness = 1.0f;
 bool fogEnabled = true;
+bool neonFlickerEnabled = true;
+static Scene* g_scene = nullptr;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -76,6 +78,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action == GLFW_PRESS && key == GLFW_KEY_G) {
         fogEnabled = !fogEnabled;
     }
+    if (action == GLFW_PRESS && key == GLFW_KEY_H) {
+        neonFlickerEnabled = !neonFlickerEnabled;
+    }
     if (action == GLFW_PRESS && (key == GLFW_KEY_LEFT_BRACKET || key == GLFW_KEY_MINUS)) {
         flashlightBrightness = std::max(0.4f, flashlightBrightness - 0.3f);
     }
@@ -112,7 +117,8 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
         isWalking = true;
     }
-    Audio::update(isWalking, isSprinting, deltaTime);
+    float flicker = (g_scene && neonFlickerEnabled) ? g_scene->getNeonFlicker() : 1.0f;
+    Audio::update(isWalking, isSprinting, deltaTime, camera.Position, camera.Front, camera.Right, flicker);
     camera.update(deltaTime);
 
     float rotSpeed = 75.0f * deltaTime;
@@ -181,6 +187,7 @@ int main() {
 
     Scene scene;
     scene.init();
+    g_scene = &scene;
 
     sceneShader.use();
     scene.setupLights(sceneShader);
@@ -239,7 +246,7 @@ int main() {
         sceneShader.setMat4("view", view);
         sceneShader.setMat4("projection", projection);
 
-        scene.render(sceneShader);
+        scene.render(sceneShader, neonFlickerEnabled ? currentFrame : 0.0f);
 
         rain.update(deltaTime, camera.Position);
         rain.render(view, projection);

@@ -7,10 +7,10 @@
 #include <cmath>
 
 SceneNode::SceneNode() 
-    : mesh(nullptr), localTransform(glm::mat4(1.0f)), isEmissive(false), isRoad(false), texture(nullptr) {}
+    : mesh(nullptr), localTransform(glm::mat4(1.0f)), isEmissive(false), isRoad(false), isFlickering(false), texture(nullptr) {}
 
-SceneNode::SceneNode(std::shared_ptr<Mesh> mesh, const glm::mat4& transform, bool isEmissive, bool isRoad, std::shared_ptr<Texture> texture)
-    : mesh(mesh), localTransform(transform), isEmissive(isEmissive), isRoad(isRoad), texture(texture) {}
+SceneNode::SceneNode(std::shared_ptr<Mesh> mesh, const glm::mat4& transform, bool isEmissive, bool isRoad, std::shared_ptr<Texture> texture, bool isFlickering)
+    : mesh(mesh), localTransform(transform), isEmissive(isEmissive), isRoad(isRoad), isFlickering(isFlickering), texture(texture) {}
 
 void SceneNode::addChild(const SceneNode& child) {
     children.push_back(child);
@@ -22,6 +22,7 @@ void SceneNode::draw(const Shader& shader, const glm::mat4& parentTransform) con
     if (mesh) {
         shader.setBool("isEmissive", isEmissive);
         shader.setBool("isRoad", isRoad);
+        shader.setBool("isFlickering", isFlickering);
 
         if (texture) {
             shader.setBool("hasTexture", true);
@@ -40,7 +41,13 @@ void SceneNode::draw(const Shader& shader, const glm::mat4& parentTransform) con
     }
 }
 
-Scene::Scene() {}
+Scene::Scene() 
+    : barLightIndex(-1),
+      baseBarDiffuse(0.0f),
+      baseBarSpecular(0.0f),
+      baseBarAmbient(0.0f),
+      currentFlicker(1.0f) {}
+
 Scene::~Scene() {}
 
 std::shared_ptr<Mesh> Scene::createPlane(float width, float depth, const glm::vec3& color, float tileX, float tileY) {
@@ -297,7 +304,13 @@ void Scene::init() {
     ShopBuilder::buildRamenShop(rootNodes, pointLights);
 
     // Bar & Lounge facade detailing
+    barLightIndex = static_cast<int>(pointLights.size());
     ShopBuilder::buildBarFacade(rootNodes, pointLights);
+    if (barLightIndex >= 0 && barLightIndex < static_cast<int>(pointLights.size())) {
+        baseBarDiffuse = pointLights[barLightIndex].diffuse;
+        baseBarSpecular = pointLights[barLightIndex].specular;
+        baseBarAmbient = pointLights[barLightIndex].ambient;
+    }
 
     // Hotel building (East side)
     auto hotelBuilding = createBox(7.5f, 9.0f, 16.0f, glm::vec3(0.20f, 0.18f, 0.16f));
@@ -376,7 +389,42 @@ void Scene::setupLights(const Shader& shader) {
     }
 }
 
-void Scene::render(const Shader& shader) {
+void Scene::render(const Shader& shader, float time) {
+    if (time > 0.0001f) {
+        float cycle = std::fmod(time, 4.2f);
+        if (cycle < 2.8f) {
+            float microJitter = 0.96f + 0.08f * std::sin(time * 120.0f) * std::sin(time * 37.0f);
+            currentFlicker = microJitter;
+        } else {
+            float t = cycle - 2.8f;
+            float spark = std::sin(t * 73.0f) * std::cos(t * 139.0f) + std::sin(t * 311.0f) * 0.5f;
+
+            if (t > 0.15f && t < 0.28f) currentFlicker = 0.04f;
+            else if (t > 0.32f && t < 0.36f) currentFlicker = 1.45f;
+            else if (t > 0.40f && t < 0.55f) currentFlicker = 0.08f;
+            else if (t > 0.58f && t < 0.62f) currentFlicker = 1.35f;
+            else if (t > 0.65f && t < 0.82f) currentFlicker = 0.03f;
+            else if (t > 0.85f && t < 0.92f) currentFlicker = 1.25f;
+            else if (t > 0.95f && t < 1.10f) currentFlicker = 0.20f + 0.15f * std::sin(t * 90.0f);
+            else currentFlicker = std::max(0.05f, std::min(1.4f, 0.7f + spark * 0.5f));
+        }
+    } else {
+        currentFlicker = 1.0f;
+    }
+
+    shader.setFloat("neonFlicker", currentFlicker);
+
+    if (barLightIndex >= 0 && barLightIndex < static_cast<int>(pointLights.size())) {
+        pointLights[barLightIndex].diffuse = baseBarDiffuse * currentFlicker;
+        pointLights[barLightIndex].specular = baseBarSpecular * currentFlicker;
+        pointLights[barLightIndex].ambient = baseBarAmbient * currentFlicker;
+
+        std::string prefix = "pointLights[" + std::to_string(barLightIndex) + "].";
+        shader.setVec3(prefix + "diffuse", pointLights[barLightIndex].diffuse);
+        shader.setVec3(prefix + "specular", pointLights[barLightIndex].specular);
+        shader.setVec3(prefix + "ambient", pointLights[barLightIndex].ambient);
+    }
+
     for (const auto& node : rootNodes) {
         node.draw(shader);
     }
