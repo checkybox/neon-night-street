@@ -52,6 +52,10 @@ private:
     glm::vec3 baseBarAmbient;
     float currentFlicker;
 
+    std::vector<glm::vec3> basePointDiffuses;
+    std::vector<glm::vec3> basePointSpeculars;
+    std::vector<glm::vec3> basePointAmbients;
+
     std::shared_ptr<Texture> asphaltTex;
     std::shared_ptr<Texture> moonTex;
 

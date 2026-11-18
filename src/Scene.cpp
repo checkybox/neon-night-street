@@ -217,36 +217,33 @@ void Scene::init() {
     for (float pz : { 10.3f, 12.9f, 15.5f })
         rootNodes.push_back(SceneNode(wheelStop, glm::translate(glm::mat4(1.0f), glm::vec3(-11.0f, 0.07f, pz))));
 
-    auto sedanMesh = Model::loadOBJ("assets/models/car_sedan.obj", glm::vec3(0.28f, 0.35f, 0.22f));
-    if (sedanMesh) {
-        glm::mat4 sedanTr = glm::translate(glm::mat4(1.0f), glm::vec3(-9.1f, 0.0f, 10.3f))
-                          * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(sedanMesh, sedanTr, false));
-    }
-
-    auto hatchbackMesh = Model::loadOBJ("assets/models/car_hatchback.obj", glm::vec3(0.55f, 0.12f, 0.12f));
-    if (hatchbackMesh) {
-        glm::mat4 hatchTr = glm::translate(glm::mat4(1.0f), glm::vec3(-9.1f, 0.0f, 15.5f))
-                          * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(hatchbackMesh, hatchTr, false));
+    struct ParkedCarDef {
+        const char* modelPath;
+        glm::vec3 bodyColor;
+        glm::vec3 position;
+        float rotationY;
+    };
+    std::vector<ParkedCarDef> parkedCars = {
+        { "assets/models/car_sedan.obj",     glm::vec3(0.24f, 0.35f, 0.26f), glm::vec3(-9.1f, 0.0f, 10.3f),  90.0f },
+        { "assets/models/car_hatchback.obj", glm::vec3(0.68f, 0.16f, 0.14f), glm::vec3(-9.1f, 0.0f, 15.5f),  90.0f },
+        { "assets/models/car_sedan.obj",     glm::vec3(0.08f, 0.14f, 0.28f), glm::vec3(-4.55f, 0.0f, -57.5f), 0.0f },
+        { "assets/models/car_hatchback.obj", glm::vec3(0.18f, 0.20f, 0.22f), glm::vec3( 4.55f, 0.0f, -38.0f), 180.0f },
+        { "assets/models/car_sedan.obj",     glm::vec3(0.48f, 0.09f, 0.12f), glm::vec3( 4.55f, 0.0f,  21.0f), 180.0f },
+        { "assets/models/car_hatchback.obj", glm::vec3(0.09f, 0.28f, 0.16f), glm::vec3(-4.55f, 0.0f,  33.0f), 0.0f }
+    };
+    for (const auto& pc : parkedCars) {
+        auto carMesh = Model::loadOBJ(pc.modelPath, pc.bodyColor, &pc.bodyColor);
+        if (carMesh) {
+            glm::mat4 carTr = glm::translate(glm::mat4(1.0f), pc.position)
+                            * glm::rotate(glm::mat4(1.0f), glm::radians(pc.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+            rootNodes.push_back(SceneNode(carMesh, carTr, false));
+        }
     }
 
     rootNodes.push_back(SceneNode(createBox(0.4f, 2.5f, 9.5f, glm::vec3(0.20f, 0.20f, 0.22f)), glm::translate(glm::mat4(1.0f), glm::vec3(-12.2f, 1.25f, 13.0f))));
 
-    auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
-    rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 0.5f, -8.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))));
-    rootNodes.push_back(SceneNode(createBox(0.4f, 6.0f, 8.0f, glm::vec3(0.18f, 0.17f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-18.5f, 3.0f, -8.0f))));
-
-    auto fenceWall = createBox(0.3f, 4.0f, 26.0f, glm::vec3(0.16f, 0.16f, 0.18f));
-    rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3( 14.5f, 2.0f, -26.0f))));
-    rootNodes.push_back(SceneNode(fenceWall, glm::translate(glm::mat4(1.0f), glm::vec3(-14.5f, 2.0f, -26.0f))));
-
-    rootNodes.push_back(SceneNode(createBox(1.6f, 1.2f, 2.4f, glm::vec3(0.16f, 0.25f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 0.7f, -8.0f))));
-    auto dumpsterLid = createBox(1.65f, 0.15f, 1.25f, glm::vec3(0.09f, 0.09f, 0.11f));
-    rootNodes.push_back(SceneNode(dumpsterLid, glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 1.35f, -8.6f))));
-    rootNodes.push_back(SceneNode(dumpsterLid, glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 1.35f, -7.4f))));
-    rootNodes.push_back(SceneNode(createBox(0.8f, 0.8f, 0.8f, glm::vec3(0.35f, 0.28f, 0.20f)), glm::translate(glm::mat4(1.0f), glm::vec3(-17.2f, 0.4f, -6.0f))));
-    rootNodes.push_back(SceneNode(createBox(0.3f, 0.15f, 0.2f, glm::vec3(0.2f, 0.85f, 0.8f)), glm::translate(glm::mat4(1.0f), glm::vec3(-18.2f, 3.0f, -8.0f)), true));
+    // Enclosed dead-end streets, boundary walls, and Unturned chain-link fence
+    AlleyBuilder::buildDeadEnds(rootNodes, pointLights);
 
     auto addPoint = [&](const glm::vec3& p, const glm::vec3& c, float amb, float diff, float spec, float lin, float quad) {
         pointLights.push_back({ p, c * amb, c * diff, c * spec, 1.0f, lin, quad });
@@ -312,15 +309,8 @@ void Scene::init() {
         baseBarAmbient = pointLights[barLightIndex].ambient;
     }
 
-    // Hotel building (East side)
-    auto hotelBuilding = createBox(7.5f, 9.0f, 16.0f, glm::vec3(0.20f, 0.18f, 0.16f));
-    rootNodes.push_back(SceneNode(hotelBuilding, glm::translate(glm::mat4(1.0f), glm::vec3(10.25f, 4.5f, -22.0f))));
-    auto hotelNeonMesh = Model::loadOBJ("assets/models/neon_sign_hotel.obj", glm::vec3(1.0f, 0.65f, 0.15f));
-    if (hotelNeonMesh) {
-        glm::mat4 hotelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(6.42f, 3.4f, -22.0f))
-                                 * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        rootNodes.push_back(SceneNode(hotelNeonMesh, hotelTransform, true));
-    }
+    // Hotel building (East side) with glowing double entrance, side door & windows
+    ShopBuilder::buildHotel(rootNodes, pointLights);
 
     // Streetlamps
     auto poleMesh = createBox(0.2f, 4.5f, 0.2f, glm::vec3(0.2f, 0.2f, 0.22f));
@@ -387,26 +377,38 @@ void Scene::setupLights(const Shader& shader) {
             shader.setFloat(prefix + "quadratic", 1.0f);
         }
     }
+
+    basePointDiffuses.resize(pointLights.size());
+    basePointSpeculars.resize(pointLights.size());
+    basePointAmbients.resize(pointLights.size());
+    for (size_t i = 0; i < pointLights.size(); ++i) {
+        basePointDiffuses[i]  = pointLights[i].diffuse;
+        basePointSpeculars[i] = pointLights[i].specular;
+        basePointAmbients[i]  = pointLights[i].ambient;
+    }
 }
 
 void Scene::render(const Shader& shader, float time) {
-    if (time > 0.0001f) {
-        float cycle = std::fmod(time, 4.2f);
-        if (cycle < 2.8f) {
-            float microJitter = 0.96f + 0.08f * std::sin(time * 120.0f) * std::sin(time * 37.0f);
-            currentFlicker = microJitter;
-        } else {
-            float t = cycle - 2.8f;
-            float spark = std::sin(t * 73.0f) * std::cos(t * 139.0f) + std::sin(t * 311.0f) * 0.5f;
+    bool isSurge = false;
+    float surgeTime = 0.0f;
 
-            if (t > 0.15f && t < 0.28f) currentFlicker = 0.04f;
-            else if (t > 0.32f && t < 0.36f) currentFlicker = 1.45f;
-            else if (t > 0.40f && t < 0.55f) currentFlicker = 0.08f;
-            else if (t > 0.58f && t < 0.62f) currentFlicker = 1.35f;
-            else if (t > 0.65f && t < 0.82f) currentFlicker = 0.03f;
-            else if (t > 0.85f && t < 0.92f) currentFlicker = 1.25f;
-            else if (t > 0.95f && t < 1.10f) currentFlicker = 0.20f + 0.15f * std::sin(t * 90.0f);
+    if (time > 0.0001f) {
+        float cycle = std::fmod(time, 8.5f);
+        if (cycle >= 6.8f) {
+            isSurge = true;
+            surgeTime = cycle - 6.8f;
+            float spark = std::sin(surgeTime * 73.0f) * std::cos(surgeTime * 139.0f) + std::sin(surgeTime * 311.0f) * 0.5f;
+
+            if (surgeTime > 0.15f && surgeTime < 0.28f) currentFlicker = 0.04f;
+            else if (surgeTime > 0.32f && surgeTime < 0.36f) currentFlicker = 1.45f;
+            else if (surgeTime > 0.40f && surgeTime < 0.55f) currentFlicker = 0.08f;
+            else if (surgeTime > 0.58f && surgeTime < 0.62f) currentFlicker = 1.35f;
+            else if (surgeTime > 0.65f && surgeTime < 0.82f) currentFlicker = 0.03f;
+            else if (surgeTime > 0.85f && surgeTime < 0.92f) currentFlicker = 1.25f;
+            else if (surgeTime > 0.95f && surgeTime < 1.10f) currentFlicker = 0.20f + 0.15f * std::sin(surgeTime * 90.0f);
             else currentFlicker = std::max(0.05f, std::min(1.4f, 0.7f + spark * 0.5f));
+        } else {
+            currentFlicker = 1.0f;
         }
     } else {
         currentFlicker = 1.0f;
@@ -414,15 +416,35 @@ void Scene::render(const Shader& shader, float time) {
 
     shader.setFloat("neonFlicker", currentFlicker);
 
-    if (barLightIndex >= 0 && barLightIndex < static_cast<int>(pointLights.size())) {
-        pointLights[barLightIndex].diffuse = baseBarDiffuse * currentFlicker;
-        pointLights[barLightIndex].specular = baseBarSpecular * currentFlicker;
-        pointLights[barLightIndex].ambient = baseBarAmbient * currentFlicker;
+    // Street-wide asynchronous light modulation synchronized with transformer surge
+    for (size_t i = 0; i < pointLights.size(); ++i) {
+        if (i >= basePointDiffuses.size()) break;
 
-        std::string prefix = "pointLights[" + std::to_string(barLightIndex) + "].";
-        shader.setVec3(prefix + "diffuse", pointLights[barLightIndex].diffuse);
-        shader.setVec3(prefix + "specular", pointLights[barLightIndex].specular);
-        shader.setVec3(prefix + "ambient", pointLights[barLightIndex].ambient);
+        float lightFlicker = 1.0f;
+        if (static_cast<int>(i) == barLightIndex) {
+            lightFlicker = currentFlicker;
+        } else if (isSurge) {
+            float lightOffset = std::fmod(static_cast<float>(i) * 0.19f, 0.85f);
+            float lt = surgeTime - lightOffset;
+            if (lt > 0.0f && lt < 0.75f) {
+                float jitter = 0.55f + 0.45f * std::sin(lt * (52.0f + static_cast<float>(i) * 6.0f));
+                if (lt > 0.20f && lt < 0.35f && (i % 3 == 0)) {
+                    jitter *= 0.15f;
+                } else if (lt > 0.45f && lt < 0.58f && (i % 2 == 1)) {
+                    jitter *= 0.20f;
+                }
+                lightFlicker = std::max(0.12f, std::min(1.30f, jitter));
+            }
+        }
+
+        pointLights[i].diffuse  = basePointDiffuses[i] * lightFlicker;
+        pointLights[i].specular = basePointSpeculars[i] * lightFlicker;
+        pointLights[i].ambient  = basePointAmbients[i] * lightFlicker;
+
+        std::string prefix = "pointLights[" + std::to_string(i) + "].";
+        shader.setVec3(prefix + "diffuse", pointLights[i].diffuse);
+        shader.setVec3(prefix + "specular", pointLights[i].specular);
+        shader.setVec3(prefix + "ambient", pointLights[i].ambient);
     }
 
     for (const auto& node : rootNodes) {

@@ -11,6 +11,9 @@ class AlleyBuilder {
 public:
     static void buildAlleys(std::vector<SceneNode>& rootNodes,
                             std::vector<PointLight>& pointLights);
+
+    static void buildDeadEnds(std::vector<SceneNode>& rootNodes,
+                              std::vector<PointLight>& pointLights);
 };
 
 #endif

@@ -14,6 +14,9 @@ public:
     static void buildBarFacade(std::vector<SceneNode>& rootNodes,
                                std::vector<PointLight>& pointLights);
 
+    static void buildHotel(std::vector<SceneNode>& rootNodes,
+                           std::vector<PointLight>& pointLights);
+
     static void buildDetailedVendingMachine(std::vector<SceneNode>& rootNodes,
                                            const glm::vec3& position,
                                            float rotationYDeg,

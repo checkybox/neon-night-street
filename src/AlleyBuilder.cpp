@@ -143,3 +143,123 @@ void AlleyBuilder::buildAlleys(std::vector<SceneNode>& rootNodes,
     addBStroke(0.06f, 0.40f, 0.08f, glm::vec3(bX, bY + 0.20f, 32.24f));
     addBStroke(0.06f, 0.40f, 0.08f, glm::vec3(bX, bY - 0.20f, 32.56f));
 }
+
+void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
+                                std::vector<PointLight>& pointLights) {
+    auto addBox = [&](float w, float h, float d, const glm::vec3& col, const glm::vec3& pos, bool emissive = false) {
+        rootNodes.push_back(SceneNode(CityBuilder::createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), emissive));
+    };
+
+    auto trashBagMesh = Model::loadOBJ("assets/models/trash_bag.obj", glm::vec3(0.08f, 0.08f, 0.09f));
+    auto addBag = [&](float x, float y, float z, float scale, float yaw) {
+        if (!trashBagMesh) return;
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z))
+                     * glm::rotate(glm::mat4(1.0f), glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f))
+                     * glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+        rootNodes.push_back(SceneNode(trashBagMesh, tr));
+    };
+
+    glm::vec3 wallCol(0.18f, 0.17f, 0.19f);
+
+    // East dead-end crossroad branch
+    addBox(0.50f, 6.5f, 12.0f, wallCol, glm::vec3(18.5f, 3.25f, -8.25f));
+    addBox(4.50f, 6.5f, 0.40f, wallCol, glm::vec3(16.25f, 3.25f, -14.0f));
+    addBox(4.50f, 6.5f, 0.40f, wallCol, glm::vec3(16.25f, 3.25f, -2.5f));
+
+    // Steel crash barrier gate with hazard paint
+    addBox(0.40f, 1.0f, 8.0f, glm::vec3(0.85f, 0.40f, 0.10f), glm::vec3(17.8f, 0.5f, -8.0f));
+    for (float bz = -11.0f; bz <= -5.0f; bz += 2.0f) {
+        addBox(0.42f, 0.25f, 0.40f, glm::vec3(0.15f), glm::vec3(17.8f, 0.5f, bz));
+    }
+
+    // Industrial service doorway in perimeter wall
+    addBox(0.06f, 2.30f, 1.20f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(18.22f, 1.15f, -6.5f));
+    addBox(0.04f, 2.20f, 1.10f, glm::vec3(0.24f, 0.22f, 0.20f), glm::vec3(18.24f, 1.15f, -6.5f));
+    addBox(0.15f, 0.15f, 0.15f, glm::vec3(1.0f, 0.70f, 0.20f), glm::vec3(18.20f, 2.50f, -6.5f), true);
+    pointLights.push_back({ glm::vec3(17.6f, 2.4f, -6.5f), glm::vec3(1.0f, 0.70f, 0.20f) * 0.05f,
+                            glm::vec3(1.0f, 0.70f, 0.20f) * 1.8f, glm::vec3(1.0f, 0.70f, 0.20f) * 1.5f,
+                            1.0f, 0.18f, 0.09f });
+
+    // Wooden cargo pallets stacked against East wall
+    for (int p = 0; p < 4; ++p) {
+        addBox(1.2f, 0.14f, 1.2f, glm::vec3(0.38f, 0.28f, 0.18f), glm::vec3(17.5f, 0.07f + p * 0.15f, -10.5f));
+    }
+    // Cardboard boxes
+    addBox(0.8f, 0.8f, 0.8f, glm::vec3(0.48f, 0.38f, 0.24f), glm::vec3(17.4f, 0.40f, -4.5f));
+    addBox(0.6f, 0.6f, 0.6f, glm::vec3(0.42f, 0.34f, 0.22f), glm::vec3(17.4f, 1.10f, -4.5f));
+
+    // West dead-end crossroad branch and restricted zone behind Konbini
+    addBox(0.50f, 6.5f, 23.0f, wallCol, glm::vec3(-18.5f, 3.25f, -2.5f));
+    // North perimeter wall directly across the street from the fence (closing gap seen in Screenshot 2)
+    addBox(4.80f, 6.5f, 0.40f, wallCol, glm::vec3(-16.15f, 3.25f, -14.0f));
+    addBox(4.80f, 0.12f, 0.50f, glm::vec3(0.24f, 0.24f, 0.26f), glm::vec3(-16.15f, 6.56f, -14.0f));
+    // South perimeter wall enclosing the restricted yard behind the fence
+    addBox(5.80f, 4.5f, 0.40f, wallCol, glm::vec3(-15.60f, 2.25f, 8.5f));
+    addBox(5.80f, 0.12f, 0.50f, glm::vec3(0.24f, 0.24f, 0.26f), glm::vec3(-15.60f, 4.56f, 8.5f));
+
+    // Unturned-Style Wire Grate Fence with angled top arms and barbed wire
+    float fencePostXs[] = { -12.8f, -14.7f, -16.6f, -18.5f };
+    glm::vec3 postCol(0.24f, 0.24f, 0.26f);
+    glm::vec3 wireCol(0.20f, 0.21f, 0.23f);
+
+    for (float px : fencePostXs) {
+        addBox(0.14f, 2.20f, 0.14f, postCol, glm::vec3(px, 1.10f, -2.50f));
+        glm::mat4 armTr = glm::translate(glm::mat4(1.0f), glm::vec3(px, 2.30f, -2.40f))
+                        * glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        rootNodes.push_back(SceneNode(CityBuilder::createBox(0.10f, 0.38f, 0.10f, postCol), armTr));
+    }
+
+    // 3 horizontal barbed wire strands across the angled top arms
+    float barbYs[] = { 2.22f, 2.34f, 2.46f };
+    float barbZs[] = { -2.46f, -2.38f, -2.30f };
+    for (int b = 0; b < 3; ++b) {
+        addBox(5.70f, 0.02f, 0.02f, glm::vec3(0.35f, 0.36f, 0.38f), glm::vec3(-15.65f, barbYs[b], barbZs[b]));
+    }
+
+    // Unturned coarse see-through wire grating: 5 horizontal wire rods
+    float wireYs[] = { 0.25f, 0.70f, 1.15f, 1.60f, 2.05f };
+    for (float wy : wireYs) {
+        addBox(5.70f, 0.025f, 0.025f, wireCol, glm::vec3(-15.65f, wy, -2.50f));
+    }
+
+    // Vertical wire rods forming open rectangular cells
+    for (float vx = -18.35f; vx <= -12.95f; vx += 0.30f) {
+        addBox(0.025f, 1.90f, 0.025f, wireCol, glm::vec3(vx, 1.15f, -2.50f));
+    }
+
+    // Industrial Dumpsters in restricted yard
+    addBox(1.6f, 1.2f, 2.4f, glm::vec3(0.14f, 0.24f, 0.16f), glm::vec3(-16.8f, 0.65f, 1.5f));
+    addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 0.9f));
+    addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 2.1f));
+
+    addBox(1.6f, 1.2f, 2.4f, glm::vec3(0.12f, 0.16f, 0.26f), glm::vec3(-16.8f, 0.65f, 5.5f));
+    addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 4.9f));
+    addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 6.1f));
+
+    // Cardboard boxes in restricted yard
+    glm::vec3 boxCol1(0.48f, 0.38f, 0.24f), boxCol2(0.42f, 0.32f, 0.20f);
+    addBox(0.9f, 0.8f, 0.9f, boxCol1, glm::vec3(-14.5f, 0.40f, 6.2f));
+    addBox(0.8f, 0.7f, 0.8f, boxCol2, glm::vec3(-14.5f, 1.15f, 6.2f));
+    addBox(0.6f, 0.5f, 0.6f, boxCol1, glm::vec3(-14.5f, 1.75f, 6.2f));
+    addBox(0.7f, 0.6f, 0.7f, boxCol2, glm::vec3(-14.5f, 0.30f, 4.8f));
+    addBox(0.8f, 0.7f, 0.8f, boxCol1, glm::vec3(-17.2f, 0.35f, -1.0f));
+    addBox(0.6f, 0.5f, 0.6f, boxCol2, glm::vec3(-17.2f, 0.95f, -1.0f));
+
+    // Trash bags
+    addBag(-17.2f, 0.0f, 3.2f, 1.1f, 25.0f);
+    addBag(-16.8f, 0.0f, 3.6f, 1.0f, 85.0f);
+    addBag(-17.0f, 0.35f, 3.4f, 0.9f, 150.0f);
+    addBag(-14.8f, 0.0f, 7.2f, 1.0f, 40.0f);
+    addBag(-15.3f, 0.0f, 7.4f, 1.05f, 110.0f);
+
+    // Glowing rear service exit door on back wall of Konbini (shoved out of wall to avoid clipping)
+    addBox(0.08f, 2.35f, 1.25f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(-12.95f, 1.20f, 3.5f));
+    addBox(0.06f, 2.25f, 1.12f, glm::vec3(0.18f, 0.20f, 0.22f), glm::vec3(-12.96f, 1.20f, 3.5f));
+    addBox(0.06f, 0.65f, 0.65f, glm::vec3(1.0f, 0.88f, 0.55f), glm::vec3(-12.98f, 1.70f, 3.5f), true);
+    addBox(0.08f, 0.20f, 0.50f, glm::vec3(0.12f, 0.95f, 0.35f), glm::vec3(-12.98f, 2.45f, 3.5f), true);
+    addBox(0.24f, 0.08f, 0.24f, glm::vec3(0.35f, 0.35f, 0.38f), glm::vec3(-13.04f, 2.80f, 3.5f));
+    addBox(0.16f, 0.03f, 0.16f, glm::vec3(1.0f, 0.85f, 0.55f), glm::vec3(-13.04f, 2.75f, 3.5f), true);
+    pointLights.push_back({ glm::vec3(-13.4f, 2.6f, 3.5f), glm::vec3(1.0f, 0.85f, 0.55f) * 0.04f,
+                            glm::vec3(1.0f, 0.85f, 0.55f) * 1.5f, glm::vec3(1.0f, 0.85f, 0.55f) * 1.2f,
+                            1.0f, 0.20f, 0.10f });
+}

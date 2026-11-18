@@ -9,7 +9,9 @@
 
 class Model {
 public:
-    static std::shared_ptr<Mesh> loadOBJ(const std::string& filepath, const glm::vec3& defaultColor = glm::vec3(0.8f));
+    static std::shared_ptr<Mesh> loadOBJ(const std::string& filepath,
+                                         const glm::vec3& defaultColor = glm::vec3(0.8f),
+                                         const glm::vec3* overrideBodyColor = nullptr);
 };
 
 #endif

@@ -143,13 +143,31 @@ void ShopBuilder::buildRamenShop(std::vector<SceneNode>& rootNodes,
 
 void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
                                 std::vector<PointLight>& pointLights) {
-    auto addBox = [&](float w, float h, float d, const glm::vec3& col, const glm::vec3& pos, bool emissive = false) {
-        rootNodes.push_back(SceneNode(CityBuilder::createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), emissive));
+    auto addBox = [&](float w, float h, float d, const glm::vec3& col, const glm::vec3& pos, bool emissive = false, bool isNeon = false) {
+        rootNodes.push_back(SceneNode(CityBuilder::createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), emissive, false, nullptr, isNeon));
     };
 
     float bX = -6.45f, bZ = -22.0f;
+    float vipZ = -26.2f;
     // Main building volume
     addBox(7.5f, 9.5f, 16.0f, glm::vec3(0.16f, 0.17f, 0.20f), glm::vec3(-10.25f, 4.75f, bZ));
+
+    // Dark polished granite base wainscot divided into piers avoiding both door openings
+    glm::vec3 plinthCol(0.08f, 0.08f, 0.09f);
+    glm::vec3 trimCol(0.65f, 0.52f, 0.25f);
+    // Plinth 1: South of secondary door
+    addBox(0.12f, 0.85f, 3.10f, plinthCol, glm::vec3(bX + 0.03f, 0.425f, -28.45f));
+    addBox(0.14f, 0.04f, 3.10f, trimCol, glm::vec3(bX + 0.04f, 0.87f, -28.45f));
+    // Plinth 2: Center pier between secondary door and main entrance
+    addBox(0.12f, 0.85f, 2.65f, plinthCol, glm::vec3(bX + 0.03f, 0.425f, -24.175f));
+    addBox(0.14f, 0.04f, 2.65f, trimCol, glm::vec3(bX + 0.04f, 0.87f, -24.175f));
+    // Plinth 3: North of main entrance under lounge display windows
+    addBox(0.12f, 0.85f, 7.15f, plinthCol, glm::vec3(bX + 0.03f, 0.425f, -17.575f));
+    addBox(0.14f, 0.04f, 7.15f, trimCol, glm::vec3(bX + 0.04f, 0.87f, -17.575f));
+
+    // Clean stone door thresholds on the ground plane
+    addBox(0.16f, 0.04f, 1.30f, glm::vec3(0.22f, 0.22f, 0.24f), glm::vec3(bX + 0.04f, 0.02f, vipZ));
+    addBox(0.18f, 0.04f, 1.60f, glm::vec3(0.28f, 0.26f, 0.22f), glm::vec3(bX + 0.05f, 0.02f, bZ));
 
     // Quilted entrance door frame
     addBox(0.10f, 2.45f, 1.55f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(bX, 1.25f, bZ));
@@ -168,6 +186,41 @@ void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
     auto stripMesh = CityBuilder::createBox(0.04f, 2.95f, 0.05f, glm::vec3(0.0f, 0.95f, 1.0f));
     rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ - 0.78f)), true, false, nullptr, true));
     rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ + 0.78f)), true, false, nullptr, true));
+
+    // Compact Art-Deco entrance canopy over main portal positioned to keep BAR neon sign fully visible
+    addBox(0.42f, 0.06f, 1.70f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(bX + 0.21f, 2.82f, bZ));
+    addBox(0.03f, 0.08f, 1.74f, glm::vec3(0.85f, 0.70f, 0.28f), glm::vec3(bX + 0.42f, 2.82f, bZ));
+    addBox(0.42f, 0.08f, 0.03f, glm::vec3(0.85f, 0.70f, 0.28f), glm::vec3(bX + 0.21f, 2.82f, bZ - 0.85f));
+    addBox(0.42f, 0.08f, 0.03f, glm::vec3(0.85f, 0.70f, 0.28f), glm::vec3(bX + 0.21f, 2.82f, bZ + 0.85f));
+    // Warm recessed canopy downlight
+    addBox(0.24f, 0.015f, 0.80f, glm::vec3(1.0f, 0.88f, 0.62f), glm::vec3(bX + 0.21f, 2.78f, bZ), true);
+
+    // Secondary VIP and service door on the left side
+    addBox(0.08f, 2.30f, 1.25f, glm::vec3(0.10f, 0.10f, 0.12f), glm::vec3(bX, 1.15f, vipZ));
+    addBox(0.06f, 2.22f, 1.12f, glm::vec3(0.14f, 0.14f, 0.16f), glm::vec3(bX + 0.01f, 1.15f, vipZ));
+    addBox(0.04f, 0.03f, 0.14f, glm::vec3(0.75f, 0.62f, 0.28f), glm::vec3(bX + 0.05f, 1.05f, vipZ - 0.35f));
+    addBox(0.06f, 0.22f, 1.05f, glm::vec3(0.55f, 0.45f, 0.22f), glm::vec3(bX + 0.03f, 0.20f, vipZ));
+    // Electronic keycard access pad with illuminated indicator
+    addBox(0.03f, 0.18f, 0.10f, glm::vec3(0.15f, 0.15f, 0.16f), glm::vec3(bX + 0.04f, 1.35f, vipZ + 0.75f));
+    addBox(0.04f, 0.02f, 0.02f, glm::vec3(0.0f, 0.95f, 0.95f), glm::vec3(bX + 0.05f, 1.38f, vipZ + 0.75f), true);
+    // Overhead shielded sconce light fixture
+    addBox(0.12f, 0.08f, 0.12f, glm::vec3(0.65f, 0.52f, 0.25f), glm::vec3(bX + 0.06f, 2.45f, vipZ));
+    addBox(0.08f, 0.02f, 0.08f, glm::vec3(1.0f, 0.85f, 0.55f), glm::vec3(bX + 0.06f, 2.40f, vipZ), true);
+
+    // Warm backlit architectural lounge display windows
+    float winZs[2] = { -18.2f, -15.8f };
+    for (float wz : winZs) {
+        addBox(0.08f, 1.80f, 1.50f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(bX + 0.02f, 1.85f, wz));
+        addBox(0.05f, 1.66f, 1.36f, glm::vec3(0.95f, 0.72f, 0.35f) * 0.85f, glm::vec3(bX + 0.03f, 1.85f, wz), true);
+        addBox(0.06f, 1.66f, 0.04f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(bX + 0.04f, 1.85f, wz));
+        addBox(0.06f, 0.04f, 1.36f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(bX + 0.04f, 1.85f, wz));
+        addBox(0.08f, 0.04f, 1.30f, glm::vec3(0.18f, 0.15f, 0.12f), glm::vec3(bX - 0.02f, 1.50f, wz));
+        addBox(0.08f, 0.04f, 1.30f, glm::vec3(0.18f, 0.15f, 0.12f), glm::vec3(bX - 0.02f, 2.10f, wz));
+    }
+
+    // Illuminated brass cocktail menu display case
+    addBox(0.05f, 0.65f, 0.50f, glm::vec3(0.75f, 0.60f, 0.25f), glm::vec3(bX + 0.03f, 1.60f, -20.6f));
+    addBox(0.06f, 0.55f, 0.40f, glm::vec3(0.98f, 0.90f, 0.65f), glm::vec3(bX + 0.04f, 1.60f, -20.6f), true);
 
     // 3D Neon "BAR" sign overhead
     auto barNeonMesh = Model::loadOBJ("assets/models/neon_sign_bar.obj", glm::vec3(0.0f, 0.95f, 1.0f));
@@ -253,4 +306,127 @@ void ShopBuilder::buildDetailedVendingMachine(std::vector<SceneNode>& rootNodes,
                                  glm::vec3(0.85f, 0.95f, 1.0f) * 1.6f, glm::vec3(0.85f, 0.95f, 1.0f) * 1.4f,
                                  1.0f, 0.18f, 0.09f });
     }
+}
+
+void ShopBuilder::buildHotel(std::vector<SceneNode>& rootNodes,
+                            std::vector<PointLight>& pointLights) {
+    auto addBox = [&](float w, float h, float d, const glm::vec3& col, const glm::vec3& pos, bool emissive = false) {
+        rootNodes.push_back(SceneNode(CityBuilder::createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), emissive));
+    };
+
+    float hX = 10.25f, hY = 4.5f, hZ = -22.0f;
+    float frontX = 6.45f;
+    float sideZ = -14.0f;
+
+    // Main hotel mass
+    addBox(7.5f, 9.0f, 16.0f, glm::vec3(0.20f, 0.18f, 0.16f), glm::vec3(hX, hY, hZ));
+
+    // Dark polished granite base with brass cap molding divided into piers avoiding both door openings
+    glm::vec3 hPlinthCol(0.08f, 0.08f, 0.09f);
+    glm::vec3 hTrimCol(0.65f, 0.52f, 0.25f);
+    // West face - South pier
+    addBox(0.12f, 0.85f, 6.65f, hPlinthCol, glm::vec3(frontX + 0.03f, 0.425f, -26.675f));
+    addBox(0.14f, 0.04f, 6.65f, hTrimCol,   glm::vec3(frontX - 0.02f, 0.87f,  -26.675f));
+    // West face - North pier
+    addBox(0.12f, 0.85f, 6.65f, hPlinthCol, glm::vec3(frontX + 0.03f, 0.425f, -17.325f));
+    addBox(0.14f, 0.04f, 6.65f, hTrimCol,   glm::vec3(frontX - 0.02f, 0.87f,  -17.325f));
+
+    // South face - West pier
+    addBox(2.80f, 0.85f, 0.12f, hPlinthCol, glm::vec3(7.90f,  0.425f, sideZ + 0.03f));
+    addBox(2.80f, 0.04f, 0.14f, hTrimCol,   glm::vec3(7.90f,  0.87f,  sideZ - 0.02f));
+    // South face - East pier
+    addBox(3.30f, 0.85f, 0.12f, hPlinthCol, glm::vec3(12.35f, 0.425f, sideZ + 0.03f));
+    addBox(3.30f, 0.04f, 0.14f, hTrimCol,   glm::vec3(12.35f, 0.87f,  sideZ - 0.02f));
+
+    // Stone threshold slabs at sidewalk level
+    addBox(0.20f, 0.04f, 2.70f, glm::vec3(0.28f, 0.26f, 0.22f), glm::vec3(frontX - 0.05f, 0.02f, hZ));
+    addBox(1.50f, 0.04f, 0.20f, glm::vec3(0.24f, 0.24f, 0.26f), glm::vec3(10.0f, 0.02f, sideZ - 0.05f));
+
+    // Main street grand entrance (West face, directly opposite the Bar):
+    glm::vec3 lobbyGlow(1.0f, 0.88f, 0.65f);
+    // Dark bronze double door portal frame
+    addBox(0.12f, 2.70f, 2.60f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(frontX, 1.35f, hZ));
+    // Glowing warm interior lobby double doors
+    addBox(0.06f, 2.45f, 1.10f, lobbyGlow * 0.90f, glm::vec3(frontX - 0.02f, 1.25f, hZ - 0.60f), true);
+    addBox(0.06f, 2.45f, 1.10f, lobbyGlow * 0.90f, glm::vec3(frontX - 0.02f, 1.25f, hZ + 0.60f), true);
+    // Vertical polished brass pull handles on both doors
+    addBox(0.04f, 0.70f, 0.03f, glm::vec3(0.85f, 0.72f, 0.25f), glm::vec3(frontX - 0.06f, 1.25f, hZ - 0.10f));
+    addBox(0.04f, 0.70f, 0.03f, glm::vec3(0.85f, 0.72f, 0.25f), glm::vec3(frontX - 0.06f, 1.25f, hZ + 0.10f));
+    // Warm glowing transom window above double doors
+    addBox(0.06f, 0.40f, 2.30f, lobbyGlow, glm::vec3(frontX - 0.02f, 2.70f, hZ), true);
+
+    // Cantilevered entrance marquee canopy over main double doors
+    addBox(0.55f, 0.08f, 3.00f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(frontX - 0.275f, 2.95f, hZ));
+    addBox(0.03f, 0.10f, 3.04f, glm::vec3(0.85f, 0.70f, 0.25f), glm::vec3(frontX - 0.55f, 2.95f, hZ));
+    addBox(0.55f, 0.10f, 0.03f, glm::vec3(0.85f, 0.70f, 0.25f), glm::vec3(frontX - 0.275f, 2.95f, hZ - 1.50f));
+    addBox(0.55f, 0.10f, 0.03f, glm::vec3(0.85f, 0.70f, 0.25f), glm::vec3(frontX - 0.275f, 2.95f, hZ + 1.50f));
+    // Warm recessed canopy downlight
+    addBox(0.35f, 0.02f, 1.00f, glm::vec3(1.0f, 0.90f, 0.70f), glm::vec3(frontX - 0.275f, 2.90f, hZ), true);
+
+    // Side street entrance door (South face at Z = sideZ):
+    addBox(1.30f, 2.45f, 0.10f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(10.0f, 1.25f, sideZ));
+    addBox(1.10f, 2.35f, 0.06f, glm::vec3(0.18f, 0.14f, 0.12f), glm::vec3(10.0f, 1.25f, sideZ - 0.02f));
+    addBox(0.60f, 0.90f, 0.07f, lobbyGlow * 0.85f, glm::vec3(10.0f, 1.65f, sideZ - 0.03f), true);
+    addBox(0.12f, 0.03f, 0.04f, glm::vec3(0.85f, 0.72f, 0.25f), glm::vec3(9.60f, 1.15f, sideZ - 0.06f));
+    // Overhead illuminated sconce above side door
+    addBox(0.20f, 0.08f, 0.15f, glm::vec3(0.65f, 0.52f, 0.25f), glm::vec3(10.0f, 2.60f, sideZ - 0.08f));
+    addBox(0.14f, 0.03f, 0.10f, glm::vec3(1.0f, 0.85f, 0.55f), glm::vec3(10.0f, 2.55f, sideZ - 0.08f), true);
+
+    // Ground floor glowing windows (Lobby / Lounge):
+    float groundWinZs[] = { -26.2f, -17.8f, -15.4f };
+    for (float wz : groundWinZs) {
+        addBox(0.08f, 1.80f, 1.60f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(frontX, 1.85f, wz));
+        addBox(0.05f, 1.66f, 1.46f, lobbyGlow * 0.88f, glm::vec3(frontX - 0.02f, 1.85f, wz), true);
+        addBox(0.06f, 1.66f, 0.04f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(frontX - 0.03f, 1.85f, wz));
+        addBox(0.06f, 0.04f, 1.46f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(frontX - 0.03f, 1.85f, wz));
+    }
+    // Side street ground windows (South face)
+    float sideWinXs[] = { 7.8f, 12.2f };
+    for (float wx : sideWinXs) {
+        addBox(1.50f, 1.80f, 0.08f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(wx, 1.85f, sideZ));
+        addBox(1.36f, 1.66f, 0.05f, lobbyGlow * 0.85f, glm::vec3(wx, 1.85f, sideZ - 0.02f), true);
+        addBox(0.04f, 1.66f, 0.06f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(wx, 1.85f, sideZ - 0.03f));
+        addBox(1.36f, 0.04f, 0.06f, glm::vec3(0.45f, 0.38f, 0.22f), glm::vec3(wx, 1.85f, sideZ - 0.03f));
+    }
+
+    // Upper floors (Floor 2 at Y = 4.6f, Floor 3 at Y = 7.0f): mostly dark with some warmly lit
+    glm::vec3 darkWinCol(0.08f, 0.09f, 0.11f);
+    glm::vec3 litWinCol(0.95f, 0.80f, 0.45f);
+
+    float upperZs[] = { -27.5f, -24.8f, -22.0f, -19.2f, -16.5f };
+    for (float wz : upperZs) {
+        bool litF2 = (wz == -24.8f || wz == -19.2f);
+        addBox(0.08f, 1.40f, 1.20f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(frontX, 4.6f, wz));
+        addBox(0.05f, 1.26f, 1.06f, litF2 ? litWinCol : darkWinCol, glm::vec3(frontX - 0.02f, 4.6f, wz), litF2);
+        addBox(0.06f, 1.26f, 0.03f, glm::vec3(0.25f, 0.22f, 0.20f), glm::vec3(frontX - 0.03f, 4.6f, wz));
+
+        bool litF3 = (wz == -27.5f || wz == -16.5f);
+        addBox(0.08f, 1.40f, 1.20f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(frontX, 7.0f, wz));
+        addBox(0.05f, 1.26f, 1.06f, litF3 ? litWinCol : darkWinCol, glm::vec3(frontX - 0.02f, 7.0f, wz), litF3);
+        addBox(0.06f, 1.26f, 0.03f, glm::vec3(0.25f, 0.22f, 0.20f), glm::vec3(frontX - 0.03f, 7.0f, wz));
+    }
+
+    // Upper floor side windows (South face)
+    for (float wx : sideWinXs) {
+        bool litS2 = (wx == 7.8f);
+        addBox(1.20f, 1.40f, 0.08f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(wx, 4.6f, sideZ));
+        addBox(1.06f, 1.26f, 0.05f, litS2 ? litWinCol : darkWinCol, glm::vec3(wx, 4.6f, sideZ - 0.02f), litS2);
+
+        bool litS3 = (wx == 12.2f);
+        addBox(1.20f, 1.40f, 0.08f, glm::vec3(0.14f, 0.13f, 0.12f), glm::vec3(wx, 7.0f, sideZ));
+        addBox(1.06f, 1.26f, 0.05f, litS3 ? litWinCol : darkWinCol, glm::vec3(wx, 7.0f, sideZ - 0.02f), litS3);
+    }
+
+    // 3D Neon Hotel Sign overhead
+    auto hotelNeonMesh = Model::loadOBJ("assets/models/neon_sign_hotel.obj", glm::vec3(1.0f, 0.65f, 0.15f));
+    if (hotelNeonMesh) {
+        glm::mat4 hotelTr = glm::translate(glm::mat4(1.0f), glm::vec3(frontX - 0.08f, 3.55f, hZ))
+                          * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        rootNodes.push_back(SceneNode(hotelNeonMesh, hotelTr, true));
+    }
+
+    // Warm hotel lobby entrance point light
+    pointLights.push_back({ glm::vec3(5.5f, 2.2f, hZ), glm::vec3(1.0f, 0.85f, 0.55f) * 0.06f,
+                            glm::vec3(1.0f, 0.85f, 0.55f) * 2.2f, glm::vec3(1.0f, 0.85f, 0.55f) * 1.8f,
+                            1.0f, 0.18f, 0.09f });
 }

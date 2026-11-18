@@ -1,4 +1,15 @@
 #define TINYOBJLOADER_IMPLEMENTATION
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifdef APIENTRY
+#undef APIENTRY
+#endif
+#endif
 #include "Model.h"
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -12,7 +23,7 @@
 
 #include <iostream>
 
-std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec3& defaultColor) {
+std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec3& defaultColor, const glm::vec3* overrideBodyColor) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -69,8 +80,14 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
                         attrib.colors[3 * idx.vertex_index + 1],
                         attrib.colors[3 * idx.vertex_index + 2]
                     );
+                    if (overrideBodyColor != nullptr) {
+                        if ((std::abs(vertex.color.r - 0.24f) < 0.05f && std::abs(vertex.color.g - 0.35f) < 0.05f && std::abs(vertex.color.b - 0.26f) < 0.05f) ||
+                            (std::abs(vertex.color.r - 0.68f) < 0.05f && std::abs(vertex.color.g - 0.16f) < 0.05f && std::abs(vertex.color.b - 0.14f) < 0.05f)) {
+                            vertex.color = *overrideBodyColor;
+                        }
+                    }
                 } else {
-                    vertex.color = defaultColor;
+                    vertex.color = (overrideBodyColor != nullptr) ? *overrideBodyColor : defaultColor;
                 }
                 indices.push_back(static_cast<unsigned int>(vertices.size()));
                 vertices.push_back(vertex);

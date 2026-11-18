@@ -149,10 +149,19 @@ void Camera::clampToBounds() {
         {  -8.6f,  -7.5f, -45.5f, -44.6f },
         // alley 3 trash bags and crates
         {   8.2f,  11.2f,   9.1f,   9.8f },
-        // west crossroad alley dumpster and crate
-        { -19.5f, -18.0f, -13.0f, -3.0f },
-        { -18.2f, -16.2f, -9.5f, -6.5f },
-        { -17.8f, -16.6f, -6.6f, -5.4f },
+        // west crossroad dead-end wall, return walls, and chain-link fence
+        { -20.0f, -18.0f, -14.5f,   9.5f },
+        { -18.8f, -13.8f, -14.5f, -13.5f },
+        { -18.8f, -12.0f,   8.2f,   8.8f },
+        { -18.5f, -12.5f,  -2.8f,  -2.2f },
+        // east crossroad dead-end wall and perimeter return walls
+        {  18.0f,  20.0f, -14.5f,  -2.2f },
+        {  17.5f,  18.2f, -12.5f,  -3.5f },
+        {  13.8f,  18.5f, -14.5f, -13.5f },
+        {  13.8f,  18.5f,  -2.8f,  -2.2f },
+        // east dead-end stacked wooden pallets and cardboard boxes
+        {  16.8f,  18.2f, -11.2f,  -9.8f },
+        {  16.9f,  17.9f,  -5.0f,  -4.0f },
         // vending machines against alley wall
         { -10.4f, -7.5f, -3.7f, -2.5f },
         // facade vending machines on extended avenue
@@ -160,7 +169,12 @@ void Camera::clampToBounds() {
         { -6.45f, -5.60f,  37.5f,  38.5f },
         // parked vehicles in konbini parking bays
         { -11.20f, -7.00f,   9.35f,  11.25f },
-        { -11.20f, -7.00f,  14.55f,  16.45f }
+        { -11.20f, -7.00f,  14.55f,  16.45f },
+        // curbside parallel parked vehicles
+        {  -5.50f, -3.60f, -59.60f, -55.40f },
+        {   3.60f,  5.50f, -40.10f, -35.90f },
+        {   3.60f,  5.50f,  18.90f,  23.10f },
+        {  -5.50f, -3.60f,  30.90f,  35.10f }
     };
 
     for (const auto& b : boxes) {
