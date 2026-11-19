@@ -4,37 +4,55 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
-std::shared_ptr<Mesh> CityBuilder::createBox(float width, float height, float depth, const glm::vec3& color) {
+void CityBuilder::appendBox(std::vector<Vertex>& verts, std::vector<unsigned int>& idxs,
+                           float width, float height, float depth, const glm::vec3& color,
+                           const glm::mat4& tr) {
     float w = width * 0.5f, h = height * 0.5f, d = depth * 0.5f;
-    std::vector<Vertex> vertices = {
-        { {-w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 0.0f} }, { { w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 0.0f} },
-        { { w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 1.0f} }, { {-w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 1.0f} },
-        { { w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 0.0f} }, { {-w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 0.0f} },
-        { {-w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 1.0f} }, { { w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 1.0f} },
-        { {-w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { {-w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { { w, -h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w,  h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { { w,  h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { {-w, -h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { {-w, -h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { {-w,  h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} }
+    glm::mat3 normMat = glm::mat3(glm::transpose(glm::inverse(tr)));
+    auto addFace = [&](const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& n) {
+        unsigned int b = static_cast<unsigned int>(verts.size());
+        glm::vec3 tn = glm::normalize(normMat * n);
+        verts.push_back({ glm::vec3(tr * glm::vec4(p0, 1.0f)), tn, color, {0.0f, 0.0f} });
+        verts.push_back({ glm::vec3(tr * glm::vec4(p1, 1.0f)), tn, color, {1.0f, 0.0f} });
+        verts.push_back({ glm::vec3(tr * glm::vec4(p2, 1.0f)), tn, color, {1.0f, 1.0f} });
+        verts.push_back({ glm::vec3(tr * glm::vec4(p3, 1.0f)), tn, color, {0.0f, 1.0f} });
+        idxs.push_back(b); idxs.push_back(b + 1); idxs.push_back(b + 2);
+        idxs.push_back(b); idxs.push_back(b + 2); idxs.push_back(b + 3);
     };
-    std::vector<unsigned int> indices = {
-         0,  1,  2,  0,  2,  3,   4,  5,  6,  4,  6,  7,
-         8,  9, 10,  8, 10, 11,  12, 13, 14, 12, 14, 15,
-        16, 17, 18, 16, 18, 19,  20, 21, 22, 20, 22, 23
-    };
+    addFace({-w, -h,  d}, { w, -h,  d}, { w,  h,  d}, {-w,  h,  d}, { 0.0f,  0.0f,  1.0f});
+    addFace({ w, -h, -d}, {-w, -h, -d}, {-w,  h, -d}, { w,  h, -d}, { 0.0f,  0.0f, -1.0f});
+    addFace({-w,  h,  d}, { w,  h,  d}, { w,  h, -d}, {-w,  h, -d}, { 0.0f,  1.0f,  0.0f});
+    addFace({-w, -h, -d}, { w, -h, -d}, { w, -h,  d}, {-w, -h,  d}, { 0.0f, -1.0f,  0.0f});
+    addFace({ w, -h,  d}, { w, -h, -d}, { w,  h, -d}, { w,  h,  d}, { 1.0f,  0.0f,  0.0f});
+    addFace({-w, -h, -d}, {-w, -h,  d}, {-w,  h,  d}, {-w,  h, -d}, {-1.0f,  0.0f,  0.0f});
+}
+
+void CityBuilder::appendPlane(std::vector<Vertex>& verts, std::vector<unsigned int>& idxs,
+                            float width, float depth, const glm::vec3& color,
+                            const glm::mat4& tr, float tileX, float tileY) {
+    float hw = width * 0.5f, hd = depth * 0.5f;
+    glm::mat3 normMat = glm::mat3(glm::transpose(glm::inverse(tr)));
+    glm::vec3 n = glm::normalize(normMat * glm::vec3(0.0f, 1.0f, 0.0f));
+    unsigned int b = static_cast<unsigned int>(verts.size());
+    verts.push_back({ glm::vec3(tr * glm::vec4(-hw, 0.0f, -hd, 1.0f)), n, color, {0.0f, tileY} });
+    verts.push_back({ glm::vec3(tr * glm::vec4( hw, 0.0f, -hd, 1.0f)), n, color, {tileX, tileY} });
+    verts.push_back({ glm::vec3(tr * glm::vec4( hw, 0.0f,  hd, 1.0f)), n, color, {tileX, 0.0f} });
+    verts.push_back({ glm::vec3(tr * glm::vec4(-hw, 0.0f,  hd, 1.0f)), n, color, {0.0f, 0.0f} });
+    idxs.push_back(b); idxs.push_back(b + 2); idxs.push_back(b + 1);
+    idxs.push_back(b); idxs.push_back(b + 3); idxs.push_back(b + 2);
+}
+
+std::shared_ptr<Mesh> CityBuilder::createBox(float width, float height, float depth, const glm::vec3& color) {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    appendBox(vertices, indices, width, height, depth, color);
     return std::make_shared<Mesh>(vertices, indices);
 }
 
 std::shared_ptr<Mesh> CityBuilder::createPlane(float width, float depth, const glm::vec3& color, float tileX, float tileY) {
-    float hw = width * 0.5f, hd = depth * 0.5f;
-    std::vector<Vertex> vertices = {
-        { {-hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, tileY} }, { { hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, tileY} },
-        { { hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, 0.0f} }, { {-hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, 0.0f} }
-    };
-    std::vector<unsigned int> indices = { 0, 2, 1, 0, 3, 2 };
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    appendPlane(vertices, indices, width, depth, color, glm::mat4(1.0f), tileX, tileY);
     return std::make_shared<Mesh>(vertices, indices);
 }
 

@@ -16,20 +16,46 @@ void SceneNode::addChild(const SceneNode& child) {
     children.push_back(child);
 }
 
+struct RenderStateCache {
+    int isEmissive = -1;
+    int isRoad = -1;
+    int isFlickering = -1;
+    int hasTexture = -1;
+};
+static RenderStateCache s_stateCache;
+
 void SceneNode::draw(const Shader& shader, const glm::mat4& parentTransform) const {
     glm::mat4 globalTransform = parentTransform * localTransform;
 
     if (mesh) {
-        shader.setBool("isEmissive", isEmissive);
-        shader.setBool("isRoad", isRoad);
-        shader.setBool("isFlickering", isFlickering);
+        int em = isEmissive ? 1 : 0;
+        if (s_stateCache.isEmissive != em) {
+            shader.setBool("isEmissive", isEmissive);
+            s_stateCache.isEmissive = em;
+        }
+        int rd = isRoad ? 1 : 0;
+        if (s_stateCache.isRoad != rd) {
+            shader.setBool("isRoad", isRoad);
+            s_stateCache.isRoad = rd;
+        }
+        int fl = isFlickering ? 1 : 0;
+        if (s_stateCache.isFlickering != fl) {
+            shader.setBool("isFlickering", isFlickering);
+            s_stateCache.isFlickering = fl;
+        }
 
         if (texture) {
-            shader.setBool("hasTexture", true);
+            if (s_stateCache.hasTexture != 1) {
+                shader.setBool("hasTexture", true);
+                s_stateCache.hasTexture = 1;
+            }
             texture->bind(0);
             shader.setInt("diffuseTexture", 0);
         } else {
-            shader.setBool("hasTexture", false);
+            if (s_stateCache.hasTexture != 0) {
+                shader.setBool("hasTexture", false);
+                s_stateCache.hasTexture = 0;
+            }
         }
 
         shader.setMat4("model", globalTransform);
@@ -174,46 +200,64 @@ void Scene::init() {
     auto baseGround = createPlane(60.0f, 80.0f, glm::vec3(0.12f), 24.0f, 32.0f);
     rootNodes.push_back(SceneNode(baseGround, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f)), false, true, asphaltTex));
 
-    auto stripeMesh = createPlane(0.2f, 2.0f, glm::vec3(0.9f, 0.8f, 0.2f));
+    // Batched highway and intersection road markings
+    std::vector<Vertex> yStripeVerts;
+    std::vector<unsigned int> yStripeIdxs;
+    glm::vec3 yellowStripeCol(0.9f, 0.8f, 0.2f);
     for (float z = -36.0f; z <= -15.0f; z += 5.0f)
-        rootNodes.push_back(SceneNode(stripeMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z))));
+        CityBuilder::appendPlane(yStripeVerts, yStripeIdxs, 0.2f, 2.0f, yellowStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z)));
     for (float z = -1.0f; z <= 18.0f; z += 5.0f)
-        rootNodes.push_back(SceneNode(stripeMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z))));
+        CityBuilder::appendPlane(yStripeVerts, yStripeIdxs, 0.2f, 2.0f, yellowStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.005f, z)));
+    rootNodes.push_back(SceneNode(std::make_shared<Mesh>(yStripeVerts, yStripeIdxs), glm::mat4(1.0f)));
 
-    auto zStripeN_S = createPlane(0.5f, 2.0f, glm::vec3(0.82f));
-    auto zStripeW_E = createPlane(2.0f, 0.5f, glm::vec3(0.82f));
+    std::vector<Vertex> wStripeVerts;
+    std::vector<unsigned int> wStripeIdxs;
+    glm::vec3 whiteStripeCol(0.82f);
     for (float x = -3.0f; x <= 3.0f; x += 1.0f) {
-        rootNodes.push_back(SceneNode(zStripeN_S, glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.006f, -14.0f))));
-        rootNodes.push_back(SceneNode(zStripeN_S, glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.006f, -2.0f))));
+        CityBuilder::appendPlane(wStripeVerts, wStripeIdxs, 0.5f, 2.0f, whiteStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.006f, -14.0f)));
+        CityBuilder::appendPlane(wStripeVerts, wStripeIdxs, 0.5f, 2.0f, whiteStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.006f, -2.0f)));
     }
     for (float z = -10.5f; z <= -5.5f; z += 1.0f) {
-        rootNodes.push_back(SceneNode(zStripeW_E, glm::translate(glm::mat4(1.0f), glm::vec3(-6.5f, 0.006f, z))));
-        rootNodes.push_back(SceneNode(zStripeW_E, glm::translate(glm::mat4(1.0f), glm::vec3( 6.5f, 0.006f, z))));
+        CityBuilder::appendPlane(wStripeVerts, wStripeIdxs, 2.0f, 0.5f, whiteStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(-6.5f, 0.006f, z)));
+        CityBuilder::appendPlane(wStripeVerts, wStripeIdxs, 2.0f, 0.5f, whiteStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3( 6.5f, 0.006f, z)));
     }
+    rootNodes.push_back(SceneNode(std::make_shared<Mesh>(wStripeVerts, wStripeIdxs), glm::mat4(1.0f)));
 
+    // Batched sidewalk curb geometry
     glm::vec3 curbColor(0.22f, 0.22f, 0.24f);
-    rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 27.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.1f, -26.5f))));
-    rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-11.75f, 0.1f, -12.6f))));
-    rootNodes.push_back(SceneNode(createBox(3.1f, 0.2f, 11.5f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.55f, 0.1f, 2.75f))));
-    rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-11.75f, 0.1f, -3.4f))));
-
-    rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 27.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(5.1f, 0.1f, -26.5f))));
-    rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(11.75f, 0.1f, -12.6f))));
-    rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 21.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(5.1f, 0.1f, 7.5f))));
-    rootNodes.push_back(SceneNode(createBox(12.5f, 0.2f, 2.2f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(11.75f, 0.1f, -3.4f))));
+    std::vector<Vertex> curbVerts;
+    std::vector<unsigned int> curbIdxs;
+    struct CurbDef { float w, h, d, x, y, z; };
+    static const CurbDef curbs[] = {
+        { 2.2f, 0.2f, 27.0f, -5.1f, 0.1f, -26.5f },
+        { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -12.6f },
+        { 3.1f, 0.2f, 11.5f, -5.55f, 0.1f, 2.75f },
+        { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -3.4f },
+        { 2.2f, 0.2f, 27.0f,  5.1f, 0.1f, -26.5f },
+        { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -12.6f },
+        { 2.2f, 0.2f, 21.0f,  5.1f, 0.1f, 7.5f },
+        { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -3.4f },
+        { 2.2f, 0.03f, 5.0f, -5.1f, 0.015f, 11.0f },
+        { 2.2f, 0.2f, 4.5f,  -5.1f, 0.1f, 15.75f }
+    };
+    for (const auto& c : curbs) {
+        CityBuilder::appendBox(curbVerts, curbIdxs, c.w, c.h, c.d, curbColor, glm::translate(glm::mat4(1.0f), glm::vec3(c.x, c.y, c.z)));
+    }
+    rootNodes.push_back(SceneNode(std::make_shared<Mesh>(curbVerts, curbIdxs), glm::mat4(1.0f)));
 
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -3.0f, 1.5f, 0.0f, -1.5707963f, -6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -13.0f, 1.5f, 1.5707963f, 0.0f, -6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -3.0f, 1.5f, -1.5707963f, -3.14159265f, 6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -13.0f, 1.5f, 3.14159265f, 1.5707963f, 6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
 
-    rootNodes.push_back(SceneNode(createBox(2.2f, 0.03f, 5.0f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.015f, 11.0f))));
-    rootNodes.push_back(SceneNode(createBox(2.2f, 0.2f, 4.5f, curbColor), glm::translate(glm::mat4(1.0f), glm::vec3(-5.1f, 0.1f, 15.75f))));
-
-    auto parkLine = createPlane(4.5f, 0.12f, glm::vec3(0.9f, 0.8f, 0.2f));
-    auto wheelStop = createBox(0.25f, 0.14f, 1.8f, glm::vec3(0.9f, 0.75f, 0.12f));
+    // Batched parking stall lines
+    std::vector<Vertex> parkLineVerts;
+    std::vector<unsigned int> parkLineIdxs;
     for (float pz : { 9.0f, 11.6f, 14.2f, 16.8f })
-        rootNodes.push_back(SceneNode(parkLine, glm::translate(glm::mat4(1.0f), glm::vec3(-9.25f, 0.007f, pz))));
+        CityBuilder::appendPlane(parkLineVerts, parkLineIdxs, 4.5f, 0.12f, yellowStripeCol, glm::translate(glm::mat4(1.0f), glm::vec3(-9.25f, 0.007f, pz)));
+    rootNodes.push_back(SceneNode(std::make_shared<Mesh>(parkLineVerts, parkLineIdxs), glm::mat4(1.0f)));
+
+    auto wheelStop = createBox(0.25f, 0.14f, 1.8f, glm::vec3(0.9f, 0.75f, 0.12f));
     for (float pz : { 10.3f, 12.9f, 15.5f })
         rootNodes.push_back(SceneNode(wheelStop, glm::translate(glm::mat4(1.0f), glm::vec3(-11.0f, 0.07f, pz))));
 
@@ -356,39 +400,28 @@ void Scene::setupLights(const Shader& shader) {
     shader.setVec3("dirLight.specular", dirLight.specular);
     shader.setInt("activePointLights", static_cast<int>(std::min(pointLights.size(), size_t(32))));
 
-    for (size_t i = 0; i < 32; ++i) {
+    for (size_t i = 0; i < pointLights.size() && i < 32; ++i) {
         std::string prefix = "pointLights[" + std::to_string(i) + "].";
-        if (i < pointLights.size()) {
-            const auto& pl = pointLights[i];
-            shader.setVec3(prefix + "position", pl.position);
-            shader.setVec3(prefix + "ambient", pl.ambient);
-            shader.setVec3(prefix + "diffuse", pl.diffuse);
-            shader.setVec3(prefix + "specular", pl.specular);
-            shader.setFloat(prefix + "constant", pl.constant);
-            shader.setFloat(prefix + "linear", pl.linear);
-            shader.setFloat(prefix + "quadratic", pl.quadratic);
-        } else {
-            shader.setVec3(prefix + "position", glm::vec3(0.0f, -100.0f, 0.0f));
-            shader.setVec3(prefix + "ambient", glm::vec3(0.0f));
-            shader.setVec3(prefix + "diffuse", glm::vec3(0.0f));
-            shader.setVec3(prefix + "specular", glm::vec3(0.0f));
-            shader.setFloat(prefix + "constant", 1.0f);
-            shader.setFloat(prefix + "linear", 1.0f);
-            shader.setFloat(prefix + "quadratic", 1.0f);
-        }
+        const auto& pl = pointLights[i];
+        shader.setVec3(prefix + "position", pl.position);
+        shader.setVec3(prefix + "ambient", pl.ambient);
+        shader.setVec3(prefix + "diffuse", pl.diffuse);
+        shader.setVec3(prefix + "specular", pl.specular);
+        shader.setFloat(prefix + "constant", pl.constant);
+        shader.setFloat(prefix + "linear", pl.linear);
+        shader.setFloat(prefix + "quadratic", pl.quadratic);
     }
 
-    basePointDiffuses.resize(pointLights.size());
-    basePointSpeculars.resize(pointLights.size());
-    basePointAmbients.resize(pointLights.size());
-    for (size_t i = 0; i < pointLights.size(); ++i) {
-        basePointDiffuses[i]  = pointLights[i].diffuse;
-        basePointSpeculars[i] = pointLights[i].specular;
-        basePointAmbients[i]  = pointLights[i].ambient;
+    basePointDiffuses.clear(); basePointSpeculars.clear(); basePointAmbients.clear();
+    for (const auto& pl : pointLights) {
+        basePointDiffuses.push_back(pl.diffuse);
+        basePointSpeculars.push_back(pl.specular);
+        basePointAmbients.push_back(pl.ambient);
     }
 }
 
 void Scene::render(const Shader& shader, float time) {
+    s_stateCache = RenderStateCache();
     bool isSurge = false;
     float surgeTime = 0.0f;
 
