@@ -154,6 +154,9 @@ void Camera::clampToBounds() {
         { -18.8f, -13.8f, -14.5f, -13.5f },
         { -18.8f, -12.0f,   8.2f,   8.8f },
         { -18.5f, -12.5f,  -2.8f,  -2.2f },
+        // west side-alley dumpster and shipping crates
+        { -17.3f, -15.1f, -13.6f, -12.0f },
+        { -15.0f, -13.8f, -13.8f, -12.6f },
         // east crossroad dead-end wall and perimeter return walls
         {  18.0f,  20.0f, -14.5f,  -2.2f },
         {  17.5f,  18.2f, -12.5f,  -3.5f },

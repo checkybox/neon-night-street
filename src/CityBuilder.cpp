@@ -1,5 +1,6 @@
 #include "CityBuilder.h"
 #include "ShopBuilder.h"
+#include "StreetProps.h"
 #include "Model.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
@@ -353,9 +354,6 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     // Pencil building
     rootNodes.push_back(SceneNode(createBox(8.0f, 14.0f, 7.0f, glm::vec3(0.15f, 0.16f, 0.18f)), glm::translate(glm::mat4(1.0f), glm::vec3(-10.5f, 7.0f, 21.0f))));
     rootNodes.push_back(SceneNode(createBox(8.2f, 0.35f, 7.2f, glm::vec3(0.12f, 0.13f, 0.14f)), glm::translate(glm::mat4(1.0f), glm::vec3(-10.5f, 14.15f, 21.0f))));
-    addWindow(-6.45f, 4.5f, 21.0f, 1.8f, 1.3f, false, glm::vec3(0.0f));
-    addWindow(-6.45f, 7.5f, 21.0f, 1.8f, 1.3f, true, glm::vec3(0.25f, 0.32f, 0.38f));
-    addWindow(-6.45f, 10.5f, 21.0f, 1.8f, 1.3f, true, glm::vec3(0.35f, 0.30f, 0.22f));
 
     // Pharmacy
     rootNodes.push_back(SceneNode(createBox(8.0f, 8.5f, 13.5f, glm::vec3(0.17f, 0.18f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(-10.5f, 4.25f, 31.25f))));
@@ -363,8 +361,6 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     rootNodes.push_back(SceneNode(createBox(0.08f, 2.1f, 1.4f, glm::vec3(0.25f, 0.92f, 0.55f)), glm::translate(glm::mat4(1.0f), glm::vec3(-6.45f, 1.15f, 30.0f)), true));
     addDoorHandle(-6.40f, 1.15f, 30.5f, glm::vec3(0.88f, 0.90f, 0.92f));
     rootNodes.push_back(SceneNode(createBox(0.08f, 1.9f, 2.6f, glm::vec3(0.80f, 0.90f, 0.85f)), glm::translate(glm::mat4(1.0f), glm::vec3(-6.45f, 1.35f, 33.0f)), true));
-    addWindow(-6.45f, 5.5f, 28.5f, 1.4f, 1.2f, true, glm::vec3(0.25f, 0.35f, 0.30f));
-    addWindow(-6.45f, 5.5f, 34.0f, 1.4f, 1.2f, false, glm::vec3(0.0f));
 
     // Pharmacy sign
     rootNodes.push_back(SceneNode(createBox(0.10f, 1.5f, 1.5f, glm::vec3(0.12f, 0.12f, 0.14f)), glm::translate(glm::mat4(1.0f), glm::vec3(-6.43f, 3.6f, 31.0f))));
@@ -379,9 +375,6 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
 
     // End cap
     rootNodes.push_back(SceneNode(createBox(8.0f, 8.0f, 16.0f, glm::vec3(0.18f, 0.18f, 0.20f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 4.0f, -66.0f))));
-    rootNodes.push_back(SceneNode(createBox(0.08f, 2.2f, 1.6f, glm::vec3(0.22f, 0.23f, 0.25f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.1f, -66.0f))));
-    addWindow(6.45f, 5.2f, -64.0f, 1.6f, 1.2f, true, glm::vec3(0.32f, 0.35f, 0.38f));
-    addWindow(6.45f, 5.2f, -68.0f, 1.6f, 1.2f, false, glm::vec3(0.0f));
 
     // Hotel tower
     rootNodes.push_back(SceneNode(createBox(8.0f, 22.0f, 12.0f, glm::vec3(0.16f, 0.17f, 0.20f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 11.0f, -52.0f))));
@@ -473,8 +466,9 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     // End cap
     rootNodes.push_back(SceneNode(createBox(8.0f, 7.5f, 6.0f, glm::vec3(0.17f, 0.17f, 0.19f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 3.75f, 41.0f))));
 
-    // Road barricades
-    auto barrierMesh = createBox(8.0f, 1.0f, 0.4f, glm::vec3(0.85f, 0.35f, 0.05f));
-    rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, -74.0f))));
-    rootNodes.push_back(SceneNode(barrierMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f,  44.0f))));
+    // Street-level props: construction road closures, building entrances, alley clutter, upper windows
+    StreetProps::buildConstructionBarriers(rootNodes, pointLights);
+    StreetProps::buildAlleyClutter(rootNodes);
+    StreetProps::buildBuildingEntrances(rootNodes, pointLights);
+    StreetProps::buildUpperWindows(rootNodes);
 }
