@@ -43,6 +43,25 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+static bool isFullscreen = false;
+static int savedWinX = 100, savedWinY = 100;
+static int savedWinWidth = SCR_WIDTH, savedWinHeight = SCR_HEIGHT;
+
+void toggleFullscreen(GLFWwindow* window) {
+    isFullscreen = !isFullscreen;
+    if (isFullscreen) {
+        glfwGetWindowPos(window, &savedWinX, &savedWinY);
+        glfwGetWindowSize(window, &savedWinWidth, &savedWinHeight);
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = monitor ? glfwGetVideoMode(monitor) : nullptr;
+        if (mode) {
+            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        }
+    } else {
+        glfwSetWindowMonitor(window, nullptr, savedWinX, savedWinY, savedWinWidth, savedWinHeight, 0);
+    }
+}
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
@@ -77,6 +96,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         } else {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
+    }
+    if (action == GLFW_PRESS && (key == GLFW_KEY_F11 || (key == GLFW_KEY_ENTER && (mods & GLFW_MOD_ALT)))) {
+        toggleFullscreen(window);
     }
     if (action == GLFW_PRESS && key == GLFW_KEY_F) {
         flashlightOn = !flashlightOn;

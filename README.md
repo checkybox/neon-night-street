@@ -67,6 +67,7 @@ cmake --build . --config Release
 * Mouse Look: Look around (pitch and yaw). Drag with Left Mouse Button or toggle mouse capture.
 * Arrow Keys: Turn and pitch camera directly (universal keyboard fallback).
 * C / Tab: Toggle mouse cursor capture mode (captured vs free pointer).
+* F11 / Alt + Enter: Toggle seamless fullscreen display mode.
 * F: Toggle player flashlight spotlight.
 * [ / ]: Decrease or increase player flashlight brightness.
 * G: Toggle atmospheric night fog.
