@@ -18,10 +18,12 @@ add_executable(${PROJECT_NAME}
     src/CityBuilder.cpp
     src/AlleyBuilder.cpp
     src/ShopBuilder.cpp
+    src/HotelBuilder.cpp
     src/StreetProps.cpp
     src/DecalBuilder.cpp
     src/Audio.cpp
     src/Rain.cpp
+    src/Cinematic.cpp
 )
 
 if(WIN32)
@@ -30,7 +32,7 @@ if(WIN32)
         target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
     else()
         find_package(OpenGL REQUIRED)
-        find_library(GLFW_LIB NAMES glfw3 glfw PATHS "${CMAKE_SOURCE_DIR}/../Libraries/lib" "${CMAKE_SOURCE_DIR}/lib")
+        find_library(GLFW_LIB NAMES glfw3 glfw PATHS "${CMAKE_SOURCE_DIR}/lib" "${CMAKE_SOURCE_DIR}/../Libraries/lib")
         if(GLFW_LIB)
             target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL ${GLFW_LIB})
         else()
@@ -43,11 +45,17 @@ elseif(APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
 else()
     find_package(OpenGL REQUIRED)
+    find_package(Threads REQUIRED)
     find_package(glfw3 QUIET)
     if(glfw3_FOUND)
-        target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw)
+        target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw Threads::Threads ${CMAKE_DL_LIBS} m)
     else()
-        target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw X11 pthread Xrandr Xi dl)
+        find_library(GLFW_LIB NAMES glfw glfw3 PATHS /usr/lib /usr/local/lib)
+        if(GLFW_LIB)
+            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL ${GLFW_LIB} Threads::Threads X11 Xrandr Xi ${CMAKE_DL_LIBS} m)
+        else()
+            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL glfw Threads::Threads X11 Xrandr Xi ${CMAKE_DL_LIBS} m)
+        endif()
     endif()
 endif()
 

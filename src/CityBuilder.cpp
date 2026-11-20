@@ -57,6 +57,7 @@ std::shared_ptr<Mesh> CityBuilder::createPlane(float width, float depth, const g
     return std::make_shared<Mesh>(vertices, indices);
 }
 
+// Industrial roll-up security shutter with reinforced guide rails and corrugated alternating slats
 static void addRibbedShutter(std::vector<SceneNode>& rootNodes, float x, float y, float z, float w, float h, int slats = 12) {
     glm::vec3 frameCol(0.18f, 0.18f, 0.20f);
     glm::vec3 slatCol1(0.24f, 0.25f, 0.27f);
@@ -74,7 +75,7 @@ static void addRibbedShutter(std::vector<SceneNode>& rootNodes, float x, float y
 }
 
 void CityBuilder::buildSkyElements(std::vector<SceneNode>& rootNodes, std::shared_ptr<Texture> moonTex) {
-    // Moon sphere
+    // Textured celestial lunar sphere generated via UV spherical coordinate parameterization
     std::vector<Vertex> moonVerts;
     std::vector<unsigned int> moonIdxs;
     int rings = 24, segs = 32;
@@ -104,7 +105,7 @@ void CityBuilder::buildSkyElements(std::vector<SceneNode>& rootNodes, std::share
                      * glm::rotate(glm::mat4(1.0f), glm::radians(75.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     rootNodes.push_back(SceneNode(std::make_shared<Mesh>(moonVerts, moonIdxs), moonTr, true, false, moonTex));
 
-    // Celestial stars
+    // Distant randomized celestial starfield dome with spectral color temperature distribution
     std::vector<Vertex> starVerts;
     std::vector<unsigned int> starIdxs;
     for (int i = 0; i < 350; ++i) {
@@ -144,6 +145,7 @@ void CityBuilder::buildSkyElements(std::vector<SceneNode>& rootNodes, std::share
 void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::shared_ptr<Texture> moonTex) {
     buildSkyElements(rootNodes, moonTex);
 
+    // Perimeter skyscraper tower layouts bounding the street volume (0: north, 1: south, 2: east, 3: west)
     struct TowerDef {
         glm::vec3 pos;
         float w, h, d;
@@ -160,10 +162,12 @@ void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::share
         { {-38.0f, 28.0f,  -8.0f}, 16.0f, 56.0f, 16.0f, 3 }, { {-34.0f, 18.0f,   8.0f}, 16.0f, 36.0f, 18.0f, 3 }
     };
 
+    // Monolithic dark tower massing and flashing red rooftop aviation warning beacons
     glm::vec3 towerColor(0.12f, 0.13f, 0.16f);
     glm::vec3 redBeacon(1.0f, 0.15f, 0.15f);
     auto beaconMesh = createBox(0.6f, 0.6f, 0.6f, redBeacon);
 
+    // Procedural facade window arrays with pseudo-random illumination states
     std::vector<Vertex> litVerts, unlitVerts;
     std::vector<unsigned int> litIdxs, unlitIdxs;
 
@@ -184,6 +188,7 @@ void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::share
         rootNodes.push_back(SceneNode(createBox(t.w, t.h, t.d, towerColor), glm::translate(glm::mat4(1.0f), t.pos)));
         rootNodes.push_back(SceneNode(beaconMesh, glm::translate(glm::mat4(1.0f), glm::vec3(t.pos.x, t.h + 0.3f, t.pos.z)), true));
 
+        // Generate street-facing window grid based on tower facade dimensions
         float span = (t.dir < 2) ? t.w : t.d;
         int cols = static_cast<int>(span / 2.6f);
         int floors = static_cast<int>((t.h - 8.0f) / 2.8f);
@@ -192,6 +197,7 @@ void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::share
             float u = -span * 0.5f + 1.6f + c * 2.6f;
             for (int r = 0; r < floors; ++r) {
                 float y = 5.0f + r * 2.8f;
+                // Sinusoidal hash to distribute lit office suites vs dark glass
                 float val = std::fmod(std::abs(std::sin((c + 1) * 12.9898f + (r + 1) * 78.233f + (i + 1) * 37.719f) * 43758.5453f), 1.0f);
 
                 bool isLit = (val > 0.68f);
@@ -202,6 +208,7 @@ void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::share
                 auto& targetV = isLit ? litVerts : unlitVerts;
                 auto& targetI = isLit ? litIdxs : unlitIdxs;
 
+                // Align window quads according to the tower's street-facing perimeter direction
                 if (t.dir == 0) {
                     float z = t.pos.z + t.d * 0.5f + 0.05f, x0 = t.pos.x + u;
                     addQuad(targetV, targetI, {x0, y, z}, {x0 + 1.2f, y, z}, {x0 + 1.2f, y + 1.4f, z}, {x0, y + 1.4f, z}, {0.0f, 0.0f, 1.0f}, col);
@@ -219,6 +226,7 @@ void CityBuilder::buildSkyscrapers(std::vector<SceneNode>& rootNodes, std::share
         }
     }
 
+    // Batch draw calls for glowing windows and non-emissive skyscraper surfaces
     if (!litVerts.empty()) rootNodes.push_back(SceneNode(std::make_shared<Mesh>(litVerts, litIdxs), glm::mat4(1.0f), true));
     if (!unlitVerts.empty()) rootNodes.push_back(SceneNode(std::make_shared<Mesh>(unlitVerts, unlitIdxs), glm::mat4(1.0f), false));
 }
@@ -231,7 +239,7 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     };
 
     auto addNeonBox = [&](float w, float h, float d, const glm::vec3& pos, const glm::vec3& col) {
-        rootNodes.push_back(SceneNode(createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), true));
+        rootNodes.push_back(SceneNode(createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), true, false, nullptr, false, 2.85f));
     };
 
     auto addWindow = [&](float x, float y, float z, float w, float h, bool isLit, const glm::vec3& litCol) {
@@ -325,7 +333,7 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     if (izakayaLantern) {
         for (float lz : { -49.4f, -51.5f, -54.4f }) {
             glm::mat4 lTr = glm::translate(glm::mat4(1.0f), glm::vec3(-6.45f, 1.95f, lz));
-            rootNodes.push_back(SceneNode(izakayaLantern, lTr, true));
+            rootNodes.push_back(SceneNode(izakayaLantern, lTr, true, false, nullptr, false, 2.2f));
         }
     }
     addPoint(glm::vec3(-5.5f, 2.2f, -51.5f), glm::vec3(1.0f, 0.65f, 0.22f), 0.05f, 1.8f, 1.5f, 0.18f, 0.09f);
@@ -444,7 +452,14 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     // Commercial arcade
     rootNodes.push_back(SceneNode(createBox(8.0f, 11.5f, 13.3f, glm::vec3(0.20f, 0.19f, 0.22f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 5.75f, 17.85f))));
     rootNodes.push_back(SceneNode(createBox(8.2f, 0.35f, 13.5f, glm::vec3(0.14f, 0.14f, 0.16f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 11.65f, 17.85f))));
-    rootNodes.push_back(SceneNode(createBox(0.08f, 2.2f, 4.0f, glm::vec3(0.40f, 0.75f, 0.85f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.35f, 17.85f)), true));
+    // Double glass entrance portal and door leaves
+    rootNodes.push_back(SceneNode(createBox(0.12f, 2.4f, 2.8f, glm::vec3(0.12f, 0.13f, 0.15f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.25f, 17.85f))));
+    for (float dz : { 17.2f, 18.5f }) {
+        rootNodes.push_back(SceneNode(createBox(0.08f, 2.2f, 1.25f, glm::vec3(0.18f, 0.20f, 0.23f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.15f, dz))));
+        rootNodes.push_back(SceneNode(createBox(0.05f, 1.6f, 0.85f, glm::vec3(0.25f, 0.32f, 0.38f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.41f, 1.45f, dz))));
+    }
+    addDoorHandle(6.38f, 1.15f, 17.75f, glm::vec3(0.85f, 0.88f, 0.90f));
+    addDoorHandle(6.38f, 1.15f, 17.95f, glm::vec3(0.85f, 0.88f, 0.90f));
     for (float wy : { 5.5f, 8.8f }) {
         addWindow(6.45f, wy, 15.0f, 1.8f, 1.3f, true, glm::vec3(0.32f, 0.28f, 0.18f));
         addWindow(6.45f, wy, 18.0f, 1.8f, 1.3f, false, glm::vec3(0.0f));
@@ -454,6 +469,7 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     // Bookstore building
     rootNodes.push_back(SceneNode(createBox(8.0f, 9.5f, 13.5f, glm::vec3(0.20f, 0.16f, 0.15f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 4.75f, 31.25f))));
     rootNodes.push_back(SceneNode(createBox(8.2f, 0.35f, 13.7f, glm::vec3(0.14f, 0.12f, 0.11f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.5f, 9.65f, 31.25f))));
+    // Street entrance awning, glowing wood door, and illuminated display windows
     auto bookAwning = createBox(0.9f, 0.12f, 4.5f, glm::vec3(0.14f, 0.14f, 0.16f));
     rootNodes.push_back(SceneNode(bookAwning, glm::translate(glm::mat4(1.0f), glm::vec3(6.25f, 2.5f, 31.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f))));
     rootNodes.push_back(SceneNode(createBox(0.08f, 2.1f, 1.4f, glm::vec3(0.92f, 0.80f, 0.55f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.45f, 1.15f, 28.0f)), true));
@@ -461,6 +477,7 @@ void CityBuilder::buildExtendedStreet(std::vector<SceneNode>& rootNodes,
     addWindow(6.45f, 5.8f, 29.0f, 1.5f, 1.2f, true, glm::vec3(0.35f, 0.28f, 0.18f));
     addWindow(6.45f, 5.8f, 33.5f, 1.5f, 1.2f, false, glm::vec3(0.0f));
 
+    // Fascia neon sign backplate mounted above awning
     rootNodes.push_back(SceneNode(createBox(0.10f, 1.1f, 4.2f, glm::vec3(0.14f, 0.14f, 0.16f)), glm::translate(glm::mat4(1.0f), glm::vec3(6.43f, 3.65f, 31.0f))));
 
     // End cap

@@ -84,6 +84,13 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
     updateCameraVectors();
 }
 
+void Camera::setPose(const glm::vec3& pos, float yaw, float pitch) {
+    Position = pos;
+    Yaw = yaw;
+    Pitch = pitch;
+    updateCameraVectors();
+}
+
 void Camera::updateCameraVectors() {
     glm::vec3 front;
     front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));

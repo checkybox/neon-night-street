@@ -19,6 +19,7 @@ uniform sampler2D diffuseTexture;
 uniform bool hasTexture;
 uniform bool isEmissive;
 uniform bool fogEnabled;
+uniform float powerFactor;
 
 vec3 ACESFilm(vec3 x) {
     float a = 2.51;
@@ -34,7 +35,20 @@ void main() {
     float dist = length(viewPos - FragPos);
 
     if (isEmissive) {
-        vec3 col = vertexColor * 1.25;
+        float pFactor = (powerFactor >= 0.0) ? powerFactor : 1.0;
+        float winPower = 1.0;
+        if (!hasTexture) {
+            float rnd = fract(sin(dot(floor(FragPos.xyz * 0.35), vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+            float thresh = 0.12 + rnd * 0.78;
+            if (pFactor < thresh) {
+                winPower = 0.04;
+            } else if (pFactor < 0.98 && (pFactor - thresh) < 0.08 && rnd > 0.45) {
+                winPower = 0.30;
+            } else {
+                winPower = 0.04 + 0.96 * min(1.0, (pFactor - thresh) / 0.15);
+            }
+        }
+        vec3 col = vertexColor * (1.25 * winPower);
         if (hasTexture) {
             col = texture(diffuseTexture, TexCoords).rgb * 1.30;
         }

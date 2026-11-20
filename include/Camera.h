@@ -36,6 +36,7 @@ public:
     glm::mat4 GetViewMatrix() const;
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
+    void setPose(const glm::vec3& pos, float yaw, float pitch);
     void update(float deltaTime);
 
 private:

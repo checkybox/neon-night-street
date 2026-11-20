@@ -24,10 +24,11 @@ void AlleyBuilder::buildAlleys(std::vector<SceneNode>& rootNodes,
         rootNodes.push_back(SceneNode(CityBuilder::createBox(w, h, d, col), glm::translate(glm::mat4(1.0f), pos), emissive));
     };
 
-    // East service alley
+    // East service alley (Z = -44.75m)
     addBoxNode(0.4f, 16.0f, 2.6f, glm::vec3(0.18f, 0.17f, 0.19f), glm::vec3(13.8f, 8.0f, -44.75f));
     rootNodes.push_back(SceneNode(CityBuilder::createPlane(7.0f, 2.5f, glm::vec3(0.11f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.005f, -44.75f)), false, true));
 
+    // Exterior steel fire escape platforms on hotel tower wall
     if (fireEscapeMesh) {
         for (float y : { 3.4f, 6.8f, 10.2f }) {
             glm::mat4 feTr = glm::translate(glm::mat4(1.0f), glm::vec3(9.2f, y, -45.95f))
@@ -36,23 +37,27 @@ void AlleyBuilder::buildAlleys(std::vector<SceneNode>& rootNodes,
         }
     }
 
+    // Refuse bags piled along east brick wall
     addBag(8.2f, 0.0f, -45.4f, 1.0f, 15.0f);
     addBag(8.8f, 0.0f, -45.2f, 0.95f, 75.0f);
     addBag(9.3f, 0.0f, -45.3f, 1.05f, 140.0f);
     addBag(8.5f, 0.35f, -45.3f, 0.85f, 210.0f);
 
+    // Wooden cargo pallet and stacked storage boxes
     addBoxNode(1.1f, 0.12f, 1.1f, glm::vec3(0.32f, 0.22f, 0.14f), glm::vec3(11.2f, 0.06f, -44.5f));
     addBoxNode(0.7f, 0.65f, 0.7f, glm::vec3(0.42f, 0.32f, 0.20f), glm::vec3(11.2f, 0.44f, -44.5f));
     addBoxNode(0.55f, 0.5f, 0.55f, glm::vec3(0.38f, 0.28f, 0.18f), glm::vec3(11.2f, 1.02f, -44.5f));
     addBoxNode(0.6f, 0.5f, 0.8f, glm::vec3(0.35f, 0.26f, 0.16f), glm::vec3(12.2f, 0.25f, -44.6f));
 
+    // Alley wall sconce fixture and warm amber illumination
     addBoxNode(0.15f, 0.2f, 0.15f, glm::vec3(1.0f, 0.8f, 0.4f), glm::vec3(9.2f, 2.6f, -45.85f), true);
     addPoint(glm::vec3(9.2f, 2.5f, -44.75f), glm::vec3(1.0f, 0.75f, 0.35f), 0.03f, 1.1f, 0.9f, 0.22f, 0.12f);
 
-    // West service alley
+    // West service alley (Z = -44.75m)
     addBoxNode(0.4f, 13.5f, 2.6f, glm::vec3(0.18f, 0.17f, 0.19f), glm::vec3(-13.8f, 6.75f, -44.75f));
     rootNodes.push_back(SceneNode(CityBuilder::createPlane(7.0f, 2.5f, glm::vec3(0.11f)), glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 0.005f, -44.75f)), false, true));
 
+    // Fire escape mounted to apartment block wall projecting into alley
     if (fireEscapeMesh) {
         for (float y : { 3.4f, 6.8f, 10.2f }) {
             glm::mat4 feTr = glm::translate(glm::mat4(1.0f), glm::vec3(-9.2f, y, -43.55f))
@@ -61,25 +66,30 @@ void AlleyBuilder::buildAlleys(std::vector<SceneNode>& rootNodes,
         }
     }
 
+    // Commercial dumpster container with dual sloped lids
     addBoxNode(1.6f, 1.2f, 2.0f, glm::vec3(0.15f, 0.22f, 0.18f), glm::vec3(-11.5f, 0.6f, -44.75f));
     addBoxNode(1.65f, 0.1f, 1.05f, glm::vec3(0.10f, 0.10f, 0.12f), glm::vec3(-11.5f, 1.25f, -45.25f));
     addBoxNode(1.65f, 0.1f, 1.05f, glm::vec3(0.10f, 0.10f, 0.12f), glm::vec3(-11.5f, 1.25f, -44.25f));
 
+    // Trash bags piled around dumpster base
     addBag(-8.8f, 0.0f, -45.3f, 1.0f, 40.0f);
     addBag(-9.4f, 0.0f, -45.2f, 1.05f, 110.0f);
     addBag(-9.1f, 0.0f, -44.4f, 0.95f, 190.0f);
     addBag(-9.1f, 0.38f, -45.2f, 0.85f, 320.0f);
 
+    // Discarded cardboard shipping boxes
     addBoxNode(0.8f, 0.6f, 0.6f, glm::vec3(0.38f, 0.28f, 0.18f), glm::vec3(-8.2f, 0.3f, -45.2f));
     addBoxNode(0.6f, 0.45f, 0.5f, glm::vec3(0.44f, 0.34f, 0.22f), glm::vec3(-8.2f, 0.82f, -45.2f));
 
+    // Overhead alley security light fixture and cool white point light
     addBoxNode(0.15f, 0.2f, 0.15f, glm::vec3(0.9f, 0.95f, 1.0f), glm::vec3(-9.2f, 2.8f, -43.65f), true);
     addPoint(glm::vec3(-9.2f, 2.7f, -44.75f), glm::vec3(0.7f, 0.85f, 1.0f), 0.03f, 1.1f, 0.9f, 0.22f, 0.12f);
 
-    // Arcade side alley
+    // Arcade side alley (East side, Z in [8.5, 11.2])
     addBoxNode(0.4f, 11.5f, 2.8f, glm::vec3(0.18f, 0.17f, 0.19f), glm::vec3(13.8f, 5.75f, 9.85f));
     rootNodes.push_back(SceneNode(CityBuilder::createPlane(7.0f, 2.7f, glm::vec3(0.11f)), glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.005f, 9.85f)), false, true));
 
+    // Fire escape on arcade side wall
     if (fireEscapeMesh) {
         for (float y : { 3.4f, 6.8f }) {
             glm::mat4 feTr = glm::translate(glm::mat4(1.0f), glm::vec3(9.2f, y, 11.15f))
@@ -88,11 +98,12 @@ void AlleyBuilder::buildAlleys(std::vector<SceneNode>& rootNodes,
         }
     }
 
+    // Refuse bags and wooden storage crate near alley turn
     addBag(8.6f, 0.0f, 9.3f, 1.0f, 25.0f);
     addBag(9.1f, 0.0f, 9.5f, 0.92f, 160.0f);
     addBoxNode(0.6f, 0.5f, 0.6f, glm::vec3(0.40f, 0.30f, 0.20f), glm::vec3(10.8f, 0.25f, 9.5f));
 
-    // Bookstore display
+    // Bookstore display window with vertical aluminum mullions and warm interior backplate
     addBoxNode(0.08f, 2.1f, 3.8f, glm::vec3(0.95f, 0.88f, 0.65f), glm::vec3(6.45f, 1.35f, 33.0f), true);
     addBoxNode(0.10f, 2.2f, 0.12f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(6.43f, 1.35f, 31.1f));
     addBoxNode(0.10f, 2.2f, 0.12f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(6.43f, 1.35f, 33.0f));
@@ -187,7 +198,7 @@ void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
         CityBuilder::appendBox(palletVerts, palletIdxs, 1.2f, 0.14f, 1.2f, glm::vec3(0.38f, 0.28f, 0.18f), glm::translate(glm::mat4(1.0f), glm::vec3(17.5f, 0.07f + p * 0.15f, -10.5f)));
     }
     rootNodes.push_back(SceneNode(std::make_shared<Mesh>(palletVerts, palletIdxs), glm::mat4(1.0f), false));
-    // Cardboard boxes
+    // Stacked cardboard storage boxes in east alcove
     addBox(0.8f, 0.8f, 0.8f, glm::vec3(0.48f, 0.38f, 0.24f), glm::vec3(17.4f, 0.40f, -4.5f));
     addBox(0.6f, 0.6f, 0.6f, glm::vec3(0.42f, 0.34f, 0.22f), glm::vec3(17.4f, 1.10f, -4.5f));
 
@@ -233,7 +244,7 @@ void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
     }
     rootNodes.push_back(SceneNode(std::make_shared<Mesh>(fenceVerts, fenceIdxs), glm::mat4(1.0f), false));
 
-    // Industrial Dumpsters in restricted yard
+    // Commercial steel dumpster containers with dual plastic lids
     addBox(1.6f, 1.2f, 2.4f, glm::vec3(0.14f, 0.24f, 0.16f), glm::vec3(-16.8f, 0.65f, 1.5f));
     addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 0.9f));
     addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 2.1f));
@@ -242,7 +253,7 @@ void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
     addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 4.9f));
     addBox(1.65f, 0.12f, 1.22f, glm::vec3(0.09f, 0.09f, 0.11f), glm::vec3(-16.8f, 1.30f, 6.1f));
 
-    // Cardboard boxes in restricted yard
+    // Discarded cardboard packing boxes in restricted yard
     glm::vec3 boxCol1(0.48f, 0.38f, 0.24f), boxCol2(0.42f, 0.32f, 0.20f);
     addBox(0.9f, 0.8f, 0.9f, boxCol1, glm::vec3(-14.5f, 0.40f, 6.2f));
     addBox(0.8f, 0.7f, 0.8f, boxCol2, glm::vec3(-14.5f, 1.15f, 6.2f));
@@ -251,20 +262,20 @@ void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
     addBox(0.8f, 0.7f, 0.8f, boxCol1, glm::vec3(-17.2f, 0.35f, -1.0f));
     addBox(0.6f, 0.5f, 0.6f, boxCol2, glm::vec3(-17.2f, 0.95f, -1.0f));
 
-    // Trash bags
+    // Piles of discarded black refuse bags in service yard
     addBag(-17.2f, 0.0f, 3.2f, 1.1f, 25.0f);
     addBag(-16.8f, 0.0f, 3.6f, 1.0f, 85.0f);
     addBag(-17.0f, 0.35f, 3.4f, 0.9f, 150.0f);
     addBag(-14.8f, 0.0f, 7.2f, 1.0f, 40.0f);
     addBag(-15.3f, 0.0f, 7.4f, 1.05f, 110.0f);
 
-    // Glowing rear service exit door on back wall of Konbini (shoved out of wall to avoid clipping)
-    addBox(0.08f, 2.35f, 1.25f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(-12.95f, 1.20f, 3.5f));
-    addBox(0.06f, 2.25f, 1.12f, glm::vec3(0.18f, 0.20f, 0.22f), glm::vec3(-12.96f, 1.20f, 3.5f));
-    addBox(0.06f, 0.65f, 0.65f, glm::vec3(1.0f, 0.88f, 0.55f), glm::vec3(-12.98f, 1.70f, 3.5f), true);
-    addBox(0.08f, 0.20f, 0.50f, glm::vec3(0.12f, 0.95f, 0.35f), glm::vec3(-12.98f, 2.45f, 3.5f), true);
-    addBox(0.24f, 0.08f, 0.24f, glm::vec3(0.35f, 0.35f, 0.38f), glm::vec3(-13.04f, 2.80f, 3.5f));
-    addBox(0.16f, 0.03f, 0.16f, glm::vec3(1.0f, 0.85f, 0.55f), glm::vec3(-13.04f, 2.75f, 3.5f), true);
+    // Glowing rear service exit door on back wall of Konbini with stepped non-overlapping depth layers
+    addBox(0.06f, 2.35f, 1.25f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(-12.93f, 1.20f, 3.5f));
+    addBox(0.04f, 2.25f, 1.12f, glm::vec3(0.18f, 0.20f, 0.22f), glm::vec3(-12.96f, 1.20f, 3.5f));
+    addBox(0.02f, 0.65f, 0.65f, glm::vec3(1.0f, 0.88f, 0.55f), glm::vec3(-12.99f, 1.70f, 3.5f), true);
+    addBox(0.04f, 0.20f, 0.50f, glm::vec3(0.12f, 0.95f, 0.35f), glm::vec3(-12.99f, 2.45f, 3.5f), true);
+    addBox(0.22f, 0.08f, 0.24f, glm::vec3(0.35f, 0.35f, 0.38f), glm::vec3(-13.06f, 2.80f, 3.5f));
+    addBox(0.14f, 0.03f, 0.16f, glm::vec3(1.0f, 0.85f, 0.55f), glm::vec3(-13.06f, 2.75f, 3.5f), true);
     pointLights.push_back({ glm::vec3(-13.4f, 2.6f, 3.5f), glm::vec3(1.0f, 0.85f, 0.55f) * 0.04f,
                             glm::vec3(1.0f, 0.85f, 0.55f) * 1.5f, glm::vec3(1.0f, 0.85f, 0.55f) * 1.2f,
                             1.0f, 0.20f, 0.10f });

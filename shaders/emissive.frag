@@ -1,5 +1,6 @@
 #version 330 core
 in vec3 FragPos;
+in vec3 Normal;
 in vec3 vertexColor;
 in vec2 TexCoords;
 
@@ -10,7 +11,18 @@ uniform sampler2D diffuseTexture;
 uniform bool hasTexture;
 uniform bool isFlickering;
 uniform float neonFlicker;
+uniform float emissiveBoost;
 uniform bool fogEnabled;
+uniform float powerFactor;
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    bool enabled;
+};
+uniform SpotLight spotLight;
 
 vec3 ACESFilm(vec3 x) {
     float a = 2.51;
@@ -22,11 +34,41 @@ vec3 ACESFilm(vec3 x) {
 }
 
 void main() {
-    float flicker = isFlickering ? (neonFlicker > 0.0 ? neonFlicker : 1.0) : 1.0;
-    vec3 col = vertexColor * 1.25 * flicker;
-    if (hasTexture) {
-        col = texture(diffuseTexture, TexCoords).rgb * 1.30 * flicker;
+    float boost = emissiveBoost > 0.05 ? emissiveBoost : 1.0;
+    float pFactor = (powerFactor >= 0.0) ? powerFactor : 1.0;
+    float flicker = isFlickering ? (neonFlicker * pFactor) : pFactor;
+
+    float maxC = max(vertexColor.r, max(vertexColor.g, vertexColor.b));
+    float minC = min(vertexColor.r, min(vertexColor.g, vertexColor.b));
+    float sat = maxC > 0.001 ? (maxC - minC) / maxC : 0.0;
+
+    float flash = 0.0;
+    if (spotLight.enabled) {
+        vec3 toLight = spotLight.position - FragPos;
+        float dist = length(toLight);
+        vec3 lightDir = toLight / dist;
+        float theta = dot(lightDir, normalize(-spotLight.direction));
+        float epsilon = spotLight.cutOff - spotLight.outerCutOff;
+        float intensity = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
+        float atten = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+        vec3 norm = (length(Normal) > 0.1) ? normalize(Normal) : lightDir;
+        float diff = max(dot(norm, lightDir), 0.28);
+        flash = diff * intensity * atten * 3.2;
     }
+
+    vec3 baseMat = hasTexture ? texture(diffuseTexture, TexCoords).rgb : vertexColor;
+    vec3 physicalReflection = baseMat * (0.05 + flash);
+
+    vec3 emissiveGlow = vec3(0.0);
+    if (maxC < 0.20) {
+        emissiveGlow = vertexColor * 0.15;
+    } else if (maxC < 0.58 && sat < 0.20) {
+        emissiveGlow = vertexColor * 0.20;
+    } else {
+        emissiveGlow = baseMat * (1.35 * boost) * flicker;
+    }
+
+    vec3 col = emissiveGlow + physicalReflection;
     if (fogEnabled && FragPos.y < 70.0) {
         vec3 fogColor = vec3(0.02, 0.025, 0.045);
         float dist = length(viewPos - FragPos);

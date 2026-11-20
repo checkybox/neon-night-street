@@ -15,15 +15,21 @@ Texture::Texture(const char* imagePath, bool generateMipmaps)
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(imagePath, &width, &height, &nrChannels, 0);
     if (data) {
+        GLenum internalFormat = GL_RGB8;
         GLenum format = GL_RGB;
-        if (nrChannels == 1)
+        if (nrChannels == 1) {
+            internalFormat = GL_R8;
             format = GL_RED;
-        else if (nrChannels == 3)
+        } else if (nrChannels == 3) {
+            internalFormat = GL_RGB8;
             format = GL_RGB;
-        else if (nrChannels == 4)
+        } else if (nrChannels == 4) {
+            internalFormat = GL_RGBA8;
             format = GL_RGBA;
+        }
 
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
         if (generateMipmaps) {
             glGenerateMipmap(GL_TEXTURE_2D);

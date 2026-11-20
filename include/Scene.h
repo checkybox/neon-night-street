@@ -16,6 +16,7 @@ struct SceneNode {
     bool isEmissive;
     bool isRoad;
     bool isFlickering;
+    float emissiveBoost;
     std::shared_ptr<Texture> texture;
     std::vector<SceneNode> children;
 
@@ -25,11 +26,14 @@ struct SceneNode {
               bool isEmissive = false, 
               bool isRoad = false, 
               std::shared_ptr<Texture> texture = nullptr,
-              bool isFlickering = false);
+              bool isFlickering = false,
+              float emissiveBoost = 1.0f);
 
     void addChild(const SceneNode& child);
     void draw(const Shader& shader, const glm::mat4& parentTransform = glm::mat4(1.0f)) const;
 };
+
+class Cinematic;
 
 class Scene {
 public:
@@ -37,11 +41,16 @@ public:
     ~Scene();
 
     void init();
-    void render(const Shader& shader, const glm::vec3& camPos, const glm::mat4& view, const glm::mat4& projection, float time = 0.0f, bool fogEnabled = true);
+    void update(float deltaTime);
+    void triggerFlickerSurge();
+    void render(const Shader& shader, const glm::vec3& camPos, const glm::mat4& view, const glm::mat4& projection, float time = 0.0f, bool fogEnabled = true, bool flashlightOn = false, const glm::vec3& flashDir = glm::vec3(0.0f, 0.0f, -1.0f));
     void setupLights(const Shader& shader);
     float getNeonFlicker() const { return currentFlicker; }
+    float getBarFlicker() const { return barFlicker; }
+    void setCinematic(Cinematic* cine) { cinematic = cine; }
 
 private:
+    Cinematic* cinematic;
     std::vector<SceneNode> rootNodes;
     std::vector<SceneNode> emissiveNodes;
     std::vector<SceneNode> skyscraperNodes;
@@ -57,6 +66,11 @@ private:
     glm::vec3 baseBarSpecular;
     glm::vec3 baseBarAmbient;
     float currentFlicker;
+    float barFlicker;
+    float accumulatedTime;
+    float surgeTimer;
+    float surgeDuration;
+    float nextSurgeCooldown;
 
     std::vector<glm::vec3> basePointDiffuses;
     std::vector<glm::vec3> basePointSpeculars;

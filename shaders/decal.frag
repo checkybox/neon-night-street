@@ -7,8 +7,18 @@ out vec4 FragColor;
 uniform sampler2D diffuseTexture;
 uniform bool isEmissive;
 uniform float neonFlicker;
+uniform float powerFactor;
 uniform vec3 viewPos;
 uniform bool fogEnabled;
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    bool enabled;
+};
+uniform SpotLight spotLight;
 
 vec3 ACESFilm(vec3 x) {
     float a = 2.51;
@@ -23,8 +33,24 @@ void main() {
     vec4 texColor = texture(diffuseTexture, TexCoords);
     if (texColor.a < 0.15) discard;
 
-    float flicker = isEmissive ? ((neonFlicker > 0.0) ? neonFlicker : 1.0) : 1.0;
-    vec3 col = texColor.rgb * (isEmissive ? 1.35 : 0.92) * flicker;
+    float pFactor = (powerFactor >= 0.0) ? powerFactor : 1.0;
+    float ambient = 0.05 + 0.87 * pFactor;
+
+    float flash = 0.0;
+    if (spotLight.enabled) {
+        vec3 toLight = spotLight.position - FragPos;
+        float dist = length(toLight);
+        vec3 lightDir = toLight / dist;
+        float theta = dot(lightDir, normalize(-spotLight.direction));
+        float epsilon = spotLight.cutOff - spotLight.outerCutOff;
+        float intensity = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
+        float atten = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+        flash = intensity * atten * 3.5;
+    }
+
+    float totalLight = min(1.35, ambient + flash);
+    float flicker = isEmissive ? (neonFlicker * pFactor) : 1.0;
+    vec3 col = texColor.rgb * (isEmissive ? (2.50 * flicker) : totalLight);
 
     if (fogEnabled) {
         float dist = length(viewPos - FragPos);

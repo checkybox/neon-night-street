@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "Audio.h"
 #include "Rain.h"
+#include "Cinematic.h"
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
@@ -26,8 +27,11 @@ bool cursorLocked = true;
 bool flashlightOn = false;
 float flashlightBrightness = 1.0f;
 bool fogEnabled = true;
-bool neonFlickerEnabled = true;
+int rainIntensity = 1;
+static bool cullingEnabled = false;
 static Scene* g_scene = nullptr;
+static Cinematic* g_cinematic = nullptr;
+static Rain* g_rain = nullptr;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -55,6 +59,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     lastX = xpos;
     lastY = ypos;
 
+    if (g_cinematic && g_cinematic->isCutsceneActive()) return;
+
     if (cursorLocked || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
@@ -79,7 +85,37 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         fogEnabled = !fogEnabled;
     }
     if (action == GLFW_PRESS && key == GLFW_KEY_H) {
-        neonFlickerEnabled = !neonFlickerEnabled;
+        if (g_scene) {
+            g_scene->triggerFlickerSurge();
+        }
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_B) {
+        if (g_cinematic) {
+            g_cinematic->toggleBlackout();
+        }
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
+        if (g_cinematic) {
+            g_cinematic->toggleCutscene(camera.Position, camera.Yaw, camera.Pitch);
+        }
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_R) {
+        rainIntensity = (rainIntensity + 1) % 4;
+        if (g_rain) {
+            g_rain->setIntensity(rainIntensity);
+        }
+        float vol = (rainIntensity == 1) ? 0.35f : ((rainIntensity == 2) ? 0.55f : ((rainIntensity == 3) ? 0.80f : 0.0f));
+        Audio::setRainVolume(vol);
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_K) {
+        cullingEnabled = !cullingEnabled;
+        if (cullingEnabled) {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+        } else {
+            glDisable(GL_CULL_FACE);
+        }
     }
     if (action == GLFW_PRESS && (key == GLFW_KEY_LEFT_BRACKET || key == GLFW_KEY_MINUS)) {
         flashlightBrightness = std::max(0.4f, flashlightBrightness - 0.3f);
@@ -90,15 +126,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void processInput(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (g_cinematic && g_cinematic->isCutsceneActive()) {
+            g_cinematic->stopCutscene();
+            camera.setPose(g_cinematic->getSavedPlayerPosition(),
+                           g_cinematic->getSavedPlayerYaw(),
+                           g_cinematic->getSavedPlayerPitch());
+        } else {
+            glfwSetWindowShouldClose(window, true);
+        }
+    }
+
+    float flicker = g_scene ? g_scene->getNeonFlicker() : 1.0f;
+    float barFlicker = g_scene ? g_scene->getBarFlicker() : 1.0f;
+    if (g_cinematic && g_cinematic->isCutsceneActive()) {
+        Audio::update(false, false, deltaTime, camera.Position, camera.Front, camera.Right, flicker, barFlicker);
+        return;
+    }
 
     bool isSprinting = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
-    if (isSprinting) {
-        camera.MovementSpeed = 8.5f;
-    } else {
-        camera.MovementSpeed = SPEED;
-    }
+    camera.MovementSpeed = isSprinting ? 8.5f : SPEED;
 
     bool isWalking = false;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -117,8 +164,7 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
         isWalking = true;
     }
-    float flicker = (g_scene && neonFlickerEnabled) ? g_scene->getNeonFlicker() : 1.0f;
-    Audio::update(isWalking, isSprinting, deltaTime, camera.Position, camera.Front, camera.Right, flicker);
+    Audio::update(isWalking, isSprinting, deltaTime, camera.Position, camera.Front, camera.Right, flicker, barFlicker);
     camera.update(deltaTime);
 
     float rotSpeed = 75.0f * deltaTime;
@@ -147,7 +193,7 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(
         SCR_WIDTH, SCR_HEIGHT, 
-        "Neon Night Street - Computer Graphics Fundamentals (Topic 21)", 
+        "Neon Night Street", 
         nullptr, nullptr
     );
     if (!window) {
@@ -156,7 +202,7 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vertical sync to prevent CPU busy loop
+    glfwSwapInterval(1); // Enable vertical sync to match display refresh rate and prevent busy loop
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -185,15 +231,20 @@ int main() {
 
     Shader sceneShader("shaders/scene.vert", "shaders/scene.frag");
 
+    Cinematic cinematic;
+    g_cinematic = &cinematic;
+
     Scene scene;
     scene.init();
+    scene.setCinematic(&cinematic);
     g_scene = &scene;
 
     sceneShader.use();
     scene.setupLights(sceneShader);
 
     Audio::init();
-    Rain rain(1800);
+    Rain rain(6000);
+    g_rain = &rain;
 
     double lastFpsTime = glfwGetTime();
     int frameCount = 0;
@@ -208,11 +259,26 @@ int main() {
         frameCount++;
         if (currentFrame - lastFpsTime >= 0.5) {
             double fps = frameCount / (currentFrame - lastFpsTime);
-            std::string title = "Neon Night Street (Topic 21) | FPS: " + std::to_string(static_cast<int>(fps));
+            std::string title = "Neon Night Street (Topic 21) | FPS: " + std::to_string(static_cast<int>(fps))
+                              + (cullingEnabled ? " | CULL: ON" : " | CULL: OFF");
             glfwSetWindowTitle(window, title.c_str());
             frameCount = 0;
             lastFpsTime = currentFrame;
         }
+
+        cinematic.update(deltaTime);
+        static bool s_wasCutscene = false;
+        bool isCutscene = cinematic.isCutsceneActive();
+        if (isCutscene) {
+            camera.setPose(cinematic.getCameraPosition(),
+                           cinematic.getCameraYaw(),
+                           cinematic.getCameraPitch());
+        } else if (s_wasCutscene) {
+            camera.setPose(cinematic.getSavedPlayerPosition(),
+                           cinematic.getSavedPlayerYaw(),
+                           cinematic.getSavedPlayerPitch());
+        }
+        s_wasCutscene = isCutscene;
 
         processInput(window);
 
@@ -246,10 +312,17 @@ int main() {
         sceneShader.setMat4("view", view);
         sceneShader.setMat4("projection", projection);
 
-        scene.render(sceneShader, camera.Position, view, projection, neonFlickerEnabled ? currentFrame : 0.0f, fogEnabled);
+        bool isBlackout = cinematic.isBlackout();
+        Audio::setBlackout(isBlackout);
 
-        rain.update(deltaTime, camera.Position);
-        rain.render(view, projection);
+        scene.update(deltaTime);
+        scene.render(sceneShader, camera.Position, view, projection, 0.0f, fogEnabled, flashlightOn, camera.Front);
+
+        if (rain.getIntensity() > 0) {
+            rain.update(deltaTime, camera.Position);
+            float rainLight = isBlackout ? cinematic.getDirLightMultiplier() : 1.0f;
+            rain.render(view, projection, rainLight, flashlightOn, camera.Position, camera.Front, flashlightBrightness);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

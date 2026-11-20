@@ -29,7 +29,7 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    // Load and auto-triangulate all polygon faces
+    // Load OBJ geometry and auto-triangulate all polygon faces
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str(), nullptr, true);
     if (!ret) {
         std::cerr << "[Model] Failed to load OBJ: " << filepath << " (" << err << ")" << std::endl;
@@ -39,6 +39,7 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
+    // Traverse all shapes and mesh face arrays
     for (const auto& shape : shapes) {
         size_t index_offset = 0;
         for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
@@ -49,12 +50,14 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
                 tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
                 Vertex vertex;
+                // Unpack 3D vertex position coordinates
                 vertex.position = glm::vec3(
                     attrib.vertices[3 * idx.vertex_index + 0],
                     attrib.vertices[3 * idx.vertex_index + 1],
                     attrib.vertices[3 * idx.vertex_index + 2]
                 );
 
+                // Unpack vertex normal vector with vertical fallback
                 if (idx.normal_index >= 0) {
                     vertex.normal = glm::vec3(
                         attrib.normals[3 * idx.normal_index + 0],
@@ -65,6 +68,7 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
                     vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
                 }
 
+                // Unpack UV texture coordinates
                 if (idx.texcoord_index >= 0) {
                     vertex.texCoords = glm::vec2(
                         attrib.texcoords[2 * idx.texcoord_index + 0],
@@ -74,6 +78,7 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
                     vertex.texCoords = glm::vec2(0.0f, 0.0f);
                 }
 
+                // Read per-vertex color extension or apply material override
                 if (!attrib.colors.empty() && static_cast<size_t>(3 * idx.vertex_index + 2) < attrib.colors.size()) {
                     vertex.color = glm::vec3(
                         attrib.colors[3 * idx.vertex_index + 0],
@@ -93,7 +98,7 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
                 vertices.push_back(vertex);
             }
 
-            // If face had missing normals, compute face normal from first 3 vertices
+            // Calculate flat face normal via cross product when normals are omitted from OBJ
             if (fv >= 3 && shape.mesh.indices[index_offset].normal_index < 0) {
                 glm::vec3 edge1 = vertices[startVertexIdx + 1].position - vertices[startVertexIdx].position;
                 glm::vec3 edge2 = vertices[startVertexIdx + 2].position - vertices[startVertexIdx].position;
@@ -107,5 +112,6 @@ std::shared_ptr<Mesh> Model::loadOBJ(const std::string& filepath, const glm::vec
         }
     }
 
+    // Construct and return GPU-buffered Mesh instance
     return std::make_shared<Mesh>(vertices, indices);
 }

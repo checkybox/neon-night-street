@@ -39,37 +39,32 @@ static float g_thunderPhase2 = 0.0f;
 static float g_thunderTimer = 8.0f;
 
 static std::atomic<float> g_neonFlicker(1.0f);
-static std::atomic<float> g_neonSpatialGainL(0.0f);
-static std::atomic<float> g_neonSpatialGainR(0.0f);
+static std::atomic<float> g_barFlicker(1.0f);
+static std::atomic<float> g_neonSpatialGainL(0.0f), g_neonSpatialGainR(0.0f);
+static float g_humPhase60 = 0.0f, g_humPhase120 = 0.0f, g_humPhase180 = 0.0f;
+static float g_barHumPhase1 = 0.0f, g_barHumPhase2 = 0.0f;
 
-static float g_humPhase60 = 0.0f;
-static float g_humPhase120 = 0.0f;
-static float g_humPhase180 = 0.0f;
+static std::vector<float> g_barMusicSamples, g_hotelMusicSamples, g_ramenChatterSamples;
+static std::vector<float> g_konbiniChimeSamples, g_konbiniCashSamples;
+static std::vector<float> g_powerOutageSamples, g_powerRestoreSamples;
 
-static std::vector<float> g_barMusicSamples;
-static std::vector<float> g_hotelMusicSamples;
-static std::vector<float> g_ramenChatterSamples;
-static std::vector<float> g_konbiniChimeSamples;
-static std::vector<float> g_konbiniCashSamples;
+static std::atomic<float> g_barSpatialGainL(0.0f), g_barSpatialGainR(0.0f);
+static std::atomic<float> g_hotelSpatialGainL(0.0f), g_hotelSpatialGainR(0.0f);
+static std::atomic<float> g_ramenSpatialGainL(0.0f), g_ramenSpatialGainR(0.0f);
+static std::atomic<float> g_konbiniSpatialGainL(0.0f), g_konbiniSpatialGainR(0.0f);
 
-static std::atomic<float> g_barSpatialGainL(0.0f);
-static std::atomic<float> g_barSpatialGainR(0.0f);
-static std::atomic<float> g_hotelSpatialGainL(0.0f);
-static std::atomic<float> g_hotelSpatialGainR(0.0f);
-static std::atomic<float> g_ramenSpatialGainL(0.0f);
-static std::atomic<float> g_ramenSpatialGainR(0.0f);
-static std::atomic<float> g_konbiniSpatialGainL(0.0f);
-static std::atomic<float> g_konbiniSpatialGainR(0.0f);
+static std::atomic<bool> g_triggerKonbiniChime(false), g_triggerKonbiniCash(false), g_triggerArcSpark(false);
+static std::atomic<bool> g_triggerBreakerTrip(false), g_triggerPowerRestore(false), g_cinematicMusic(false), g_isBlackout(false);
 
-static std::atomic<bool> g_triggerKonbiniChime(false);
-static std::atomic<bool> g_triggerKonbiniCash(false);
+static float g_arcSparkTimeLeft = 0.0f;
+static float g_arcPhase1 = 0.0f, g_arcPhase2 = 0.0f, g_arcPhase3 = 0.0f;
+static float g_breakerTripTimeLeft = 0.0f, g_breakerPhase = 0.0f;
+static float g_powerRestoreTimeLeft = 0.0f, g_powerRestorePhase = 0.0f;
 
-static size_t g_barPlayPos = 0;
+static size_t g_barPlayPos = 0, g_hotelPlayPos = 0, g_ramenPlayPos = 0;
 static float g_barLp = 0.0f;
-static size_t g_hotelPlayPos = 0;
-static size_t g_ramenPlayPos = 0;
-static size_t g_konbiniChimePlayPos = 99999999;
-static size_t g_konbiniCashPlayPos = 99999999;
+static size_t g_konbiniChimePlayPos = 99999999, g_konbiniCashPlayPos = 99999999;
+static size_t g_powerOutagePlayPos = 99999999, g_powerRestorePlayPos = 99999999;
 static float g_konbiniTimer = 10.0f;
 static bool g_konbiniAlt = false;
 
@@ -86,43 +81,70 @@ static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pIn
         g_footstepVolume = g_nextStepVolume.load();
     }
 
-    if (g_triggerKonbiniChime.load()) {
-        g_triggerKonbiniChime.store(false);
-        g_konbiniChimePlayPos = 0;
+    if (g_triggerKonbiniChime.load()) { g_triggerKonbiniChime.store(false); g_konbiniChimePlayPos = 0; }
+    if (g_triggerKonbiniCash.load()) { g_triggerKonbiniCash.store(false); g_konbiniCashPlayPos = 0; }
+    if (g_triggerArcSpark.load()) {
+        g_triggerArcSpark.store(false);
+        g_arcSparkTimeLeft = 0.85f;
+        g_arcPhase1 = 0.0f; g_arcPhase2 = 0.0f; g_arcPhase3 = 0.0f;
     }
-    if (g_triggerKonbiniCash.load()) {
-        g_triggerKonbiniCash.store(false);
-        g_konbiniCashPlayPos = 0;
+    if (g_triggerBreakerTrip.load()) {
+        g_triggerBreakerTrip.store(false);
+        g_powerRestorePlayPos = 99999999;
+        g_powerRestoreTimeLeft = 0.0f;
+        if (!g_powerOutageSamples.empty()) {
+            g_powerOutagePlayPos = 0;
+            g_breakerTripTimeLeft = 0.0f;
+        } else {
+            g_breakerTripTimeLeft = 0.65f;
+            g_breakerPhase = 0.0f;
+        }
+    }
+    if (g_triggerPowerRestore.load()) {
+        g_triggerPowerRestore.store(false);
+        g_powerOutagePlayPos = 99999999;
+        g_breakerTripTimeLeft = 0.0f;
+        if (!g_powerRestoreSamples.empty()) {
+            g_powerRestorePlayPos = 0;
+            g_powerRestoreTimeLeft = 0.0f;
+        } else {
+            g_powerRestoreTimeLeft = 3.6f;
+            g_powerRestorePhase = 0.0f;
+        }
     }
 
-    float flickerVal = g_neonFlicker.load();
-    float humGainL = g_neonSpatialGainL.load();
-    float humGainR = g_neonSpatialGainR.load();
+    bool isBlackout = g_isBlackout.load();
+    float flickerVal = isBlackout ? 0.0f : g_neonFlicker.load();
+    float humGainL = isBlackout ? 0.0f : g_neonSpatialGainL.load();
+    float humGainR = isBlackout ? 0.0f : g_neonSpatialGainR.load();
 
-    float barGainL = g_barSpatialGainL.load();
-    float barGainR = g_barSpatialGainR.load();
-    float hotelGainL = g_hotelSpatialGainL.load();
-    float hotelGainR = g_hotelSpatialGainR.load();
-    float ramenGainL = g_ramenSpatialGainL.load();
-    float ramenGainR = g_ramenSpatialGainR.load();
-    float konbiniGainL = g_konbiniSpatialGainL.load();
-    float konbiniGainR = g_konbiniSpatialGainR.load();
+    float barGainL = isBlackout ? 0.0f : g_barSpatialGainL.load();
+    float barGainR = isBlackout ? 0.0f : g_barSpatialGainR.load();
+    float hotelGainL = isBlackout ? 0.0f : g_hotelSpatialGainL.load();
+    float hotelGainR = isBlackout ? 0.0f : g_hotelSpatialGainR.load();
+    float ramenGainL = isBlackout ? 0.0f : g_ramenSpatialGainL.load();
+    float ramenGainR = isBlackout ? 0.0f : g_ramenSpatialGainR.load();
+    float konbiniGainL = isBlackout ? 0.0f : g_konbiniSpatialGainL.load();
+    float konbiniGainR = isBlackout ? 0.0f : g_konbiniSpatialGainR.load();
 
     for (ma_uint32 i = 0; i < frameCount; ++i) {
         float whiteL = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 2.0f - 1.0f;
         float whiteR = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 2.0f - 1.0f;
 
-        // Multi-pole low-pass filtering for organic rain patter with audible rainfall droplets
-        g_rainFiltL1 = g_rainFiltL1 * 0.92f + whiteL * 0.08f;
-        g_rainFiltL2 = g_rainFiltL2 * 0.89f + g_rainFiltL1 * 0.11f;
-        g_rainFiltL3 = g_rainFiltL3 * 0.86f + g_rainFiltL2 * 0.14f;
+        // Multi-stage filtering for asphalt rain texture with tactile micro-droplet impacts
+        g_rainFiltL1 = g_rainFiltL1 * 0.90f + whiteL * 0.10f;
+        g_rainFiltL2 = g_rainFiltL2 * 0.86f + g_rainFiltL1 * 0.14f;
+        g_rainFiltL3 = g_rainFiltL3 * 0.82f + g_rainFiltL2 * 0.18f;
+        g_rainFiltR1 = g_rainFiltR1 * 0.90f + whiteR * 0.10f;
+        g_rainFiltR2 = g_rainFiltR2 * 0.86f + g_rainFiltR1 * 0.14f;
+        g_rainFiltR3 = g_rainFiltR3 * 0.82f + g_rainFiltR2 * 0.18f;
 
-        g_rainFiltR1 = g_rainFiltR1 * 0.92f + whiteR * 0.08f;
-        g_rainFiltR2 = g_rainFiltR2 * 0.89f + g_rainFiltR1 * 0.11f;
-        g_rainFiltR3 = g_rainFiltR3 * 0.86f + g_rainFiltR2 * 0.14f;
-
-        float sampleL = g_rainFiltL3 * rainVol;
-        float sampleR = g_rainFiltR3 * rainVol;
+        float sampleL = (g_rainFiltL2 * 0.40f + g_rainFiltL3 * 0.60f) * rainVol;
+        float sampleR = (g_rainFiltR2 * 0.40f + g_rainFiltR3 * 0.60f) * rainVol;
+        if (rainVol > 0.05f && (rand() % 1000) < static_cast<int>(rainVol * 150.0f)) {
+            float dropPip = ((rand() % 100) / 100.0f - 0.5f) * (rainVol * 0.28f);
+            sampleL += dropPip; sampleR += dropPip * 0.90f;
+        }
 
         // Distant rolling thunder rumble
         if (g_thunderTimeLeft > 0.0f) {
@@ -165,21 +187,72 @@ static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pIn
             g_footstepTimeLeft -= 1.0f / 48000.0f;
         }
 
-        // Subdued spatialized electrical mains hum and dielectric arc crackles - active only during surge
-        if ((humGainL > 0.0005f || humGainR > 0.0005f) && std::abs(flickerVal - 1.0f) > 0.03f) {
+        // Global dielectric arc discharge crackles triggered during surge
+        if (g_arcSparkTimeLeft > 0.0f) {
+            float t = 0.85f - g_arcSparkTimeLeft;
+            float env = (t < 0.04f) ? (t / 0.04f) : std::exp(-3.6f * (t - 0.04f));
+            float buzz = std::sin(g_arcPhase1) * 0.45f + std::sin(g_arcPhase2) * 0.35f + std::sin(g_arcPhase3) * 0.20f;
+            buzz = std::tanh(buzz * 2.2f);
+            if ((rand() % 10) < 5) buzz += whiteL * 0.35f;
+            float arcVol = isBlackout ? 0.16f : 0.42f;
+            float arcAudio = buzz * env * arcVol;
+            sampleL += arcAudio;
+            sampleR += arcAudio * 0.95f;
+            g_arcPhase1 += 6.2831853f * 120.0f / 48000.0f;
+            g_arcPhase2 += 6.2831853f * 240.0f / 48000.0f;
+            g_arcPhase3 += 6.2831853f * 360.0f / 48000.0f;
+            g_arcSparkTimeLeft -= 1.0f / 48000.0f;
+        }
+
+        // Industrial breaker trip snap and power outage rumble
+        if (g_powerOutagePlayPos < g_powerOutageSamples.size()) {
+            float s = g_powerOutageSamples[g_powerOutagePlayPos++];
+            sampleL += s;
+            sampleR += s * 0.95f;
+        } else if (g_breakerTripTimeLeft > 0.0f) {
+            float t = 0.65f - g_breakerTripTimeLeft;
+            float snap = std::sin(6.2831853f * 3200.0f * t) * std::exp(-90.0f * t) * 0.45f;
+            float thud = std::sin(g_breakerPhase) * std::exp(-10.0f * t) * 0.62f;
+            float breakerAudio = (snap + thud) * 0.46f;
+            sampleL += breakerAudio;
+            sampleR += breakerAudio;
+            g_breakerPhase += 6.2831853f * (55.0f - 25.0f * t) / 48000.0f;
+            g_breakerTripTimeLeft -= 1.0f / 48000.0f;
+        }
+
+        // Transformer spin up and electric power restoration
+        if (g_powerRestorePlayPos < g_powerRestoreSamples.size()) {
+            float s = g_powerRestoreSamples[g_powerRestorePlayPos++];
+            sampleL += s;
+            sampleR += s * 0.95f;
+        } else if (g_powerRestoreTimeLeft > 0.0f) {
+            float t = 3.6f - g_powerRestoreTimeLeft;
+            float p = std::min(1.0f, t / 2.6f);
+            float freq = 45.0f + 38.0f * (p * (2.0f - p));
+            float hum = std::sin(g_powerRestorePhase) * 0.65f + std::sin(g_powerRestorePhase * 2.0f) * 0.35f;
+            float env = (t < 0.5f) ? (t / 0.5f) : ((t > 2.4f) ? 0.5f * (1.0f + std::cos(3.14159265f * (t - 2.4f) / 1.2f)) : 1.0f);
+            float restoreAudio = hum * env * 0.24f;
+            for (float clickT : { 0.35f, 0.95f, 1.55f, 2.15f }) {
+                float dt = t - clickT;
+                if (dt > 0.0f && dt < 0.04f) {
+                    restoreAudio += whiteL * std::exp(-120.0f * dt) * 0.16f;
+                }
+            }
+            sampleL += restoreAudio;
+            sampleR += restoreAudio;
+            g_powerRestorePhase += 6.2831853f * freq / 48000.0f;
+            g_powerRestoreTimeLeft -= 1.0f / 48000.0f;
+        }
+
+        // Spatialized electrical mains hum - active during surge and strictly muted during blackout
+        if (!isBlackout && (humGainL > 0.0005f || humGainR > 0.0005f) && std::abs(flickerVal - 1.0f) > 0.03f && flickerVal > 0.05f) {
             float hum60  = std::sin(g_humPhase60) * 0.25f;
             float hum120 = std::sin(g_humPhase120) * 0.55f;
             float hum180 = std::sin(g_humPhase180) * 0.20f;
             float hum = (hum60 + hum120 + hum180) * 0.45f;
-
             float struggle = std::abs(flickerVal - 1.0f);
-
-            float arcCrackle = 0.0f;
-            if (flickerVal < 0.40f || flickerVal > 1.20f) {
-                arcCrackle = whiteL * 0.22f;
-            }
-
-            float buzz = (hum * (0.8f + struggle * 0.7f) + arcCrackle) * 0.055f;
+            float arcCrackle = (flickerVal < 0.40f || flickerVal > 1.20f) ? whiteL * 0.22f : 0.0f;
+            float buzz = (hum * (0.8f + struggle * 0.7f) + arcCrackle) * 0.55f;
             sampleL += buzz * humGainL;
             sampleR += buzz * humGainR;
 
@@ -188,11 +261,29 @@ static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pIn
             g_humPhase180 += 6.2831853f * 180.0f / 48000.0f;
         }
 
-        // Muffled bar music thumping through exterior facade
-        if (!g_barMusicSamples.empty() && (barGainL > 0.0005f || barGainR > 0.0005f)) {
+        // Spatialized neon bar flicker sound with mains hum and dielectric arcing
+        float barFlickerVal = isBlackout ? 0.0f : g_barFlicker.load();
+        if (!isBlackout && (barGainL > 0.0005f || barGainR > 0.0005f) && std::abs(barFlickerVal - 1.0f) > 0.03f && barFlickerVal > 0.02f) {
+            float barHum = (std::sin(g_barHumPhase1) * 0.45f + std::sin(g_barHumPhase2) * 0.55f);
+            float barArc = (barFlickerVal < 0.45f) ? whiteL * 0.35f : 0.0f;
+            float barBuzz = (barHum * 0.35f + barArc) * 0.65f * std::abs(barFlickerVal - 1.0f);
+            sampleL += barBuzz * barGainL;
+            sampleR += barBuzz * barGainR;
+            g_barHumPhase1 += 6.2831853f * 60.0f / 48000.0f;
+            g_barHumPhase2 += 6.2831853f * 120.0f / 48000.0f;
+        }
+
+        // Bar music playback: full-fidelity stereo during cutscene movie, spatialized muffled outdoors
+        if (g_cinematicMusic.load()) {
+            if (!g_barMusicSamples.empty()) {
+                float s = g_barMusicSamples[g_barPlayPos++];
+                if (g_barPlayPos >= g_barMusicSamples.size()) g_barPlayPos = 0;
+                sampleL += s * 0.40f;
+                sampleR += s * 0.40f;
+            }
+        } else if (!g_barMusicSamples.empty() && (barGainL > 0.0005f || barGainR > 0.0005f)) {
             float s = g_barMusicSamples[g_barPlayPos++];
             if (g_barPlayPos >= g_barMusicSamples.size()) g_barPlayPos = 0;
-            // Single-pole low-pass filter at approximately 350 Hz for authentic wall muffling
             g_barLp = g_barLp * 0.88f + s * 0.12f;
             sampleL += g_barLp * barGainL;
             sampleR += g_barLp * barGainR;
@@ -256,12 +347,9 @@ static bool loadAudioFile(const char* filePath, std::vector<float>& outBuffer) {
 }
 
 static bool loadSampleWithFallback(const char* relativePath, std::vector<float>& outBuffer) {
-    std::string p1 = relativePath;
-    std::string p2 = std::string("../") + relativePath;
-    std::string p3 = std::string("../../") + relativePath;
-    if (loadAudioFile(p1.c_str(), outBuffer)) return true;
-    if (loadAudioFile(p2.c_str(), outBuffer)) return true;
-    if (loadAudioFile(p3.c_str(), outBuffer)) return true;
+    for (std::string prefix : { "", "../", "../../" }) {
+        if (loadAudioFile((prefix + relativePath).c_str(), outBuffer)) return true;
+    }
     return false;
 }
 
@@ -298,6 +386,8 @@ bool Audio::init() {
     }
     loadSampleWithFallback("assets/audio/konbini_chime.mp3", g_konbiniChimeSamples);
     loadSampleWithFallback("assets/audio/konbini_cash.mp3", g_konbiniCashSamples);
+    loadSampleWithFallback("assets/audio/power_outage.wav", g_powerOutageSamples);
+    loadSampleWithFallback("assets/audio/power_restore.wav", g_powerRestoreSamples);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format   = ma_format_f32;
@@ -330,37 +420,36 @@ void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
                    const glm::vec3& camPos,
                    const glm::vec3& camFront,
                    const glm::vec3& camRight,
-                   float neonFlicker) {
+                   float neonFlicker,
+                   float barFlicker) {
     (void)camFront;
     g_isWalking.store(isWalking);
     g_isSprinting.store(isSprinting);
 
-    // Spatial calculations for neon sign electrical fixture
-    computeSpatialGains(glm::vec3(-6.45f, 3.55f, -22.0f), camPos, camRight, 18.0f, 0.18f,
-                        g_neonSpatialGainL, g_neonSpatialGainR);
+    // Spatial calculations for neon sign electrical fixtures
+    glm::vec3 nPos1(-6.45f, 3.55f, -22.0f);
+    glm::vec3 nPos2(-6.33f, 3.6f, 3.0f);
+    glm::vec3 activeNeon = (glm::length(nPos1 - camPos) < glm::length(nPos2 - camPos)) ? nPos1 : nPos2;
+    computeSpatialGains(activeNeon, camPos, camRight, 40.0f, 0.24f, g_neonSpatialGainL, g_neonSpatialGainR);
     g_neonFlicker.store(neonFlicker);
+    g_barFlicker.store(barFlicker);
 
     // Spatial calculations for points of interest
-    computeSpatialGains(glm::vec3(-6.45f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.35f,
-                        g_barSpatialGainL, g_barSpatialGainR);
-    computeSpatialGains(glm::vec3(7.5f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.28f,
-                        g_hotelSpatialGainL, g_hotelSpatialGainR);
-    computeSpatialGains(glm::vec3(6.8f, 1.8f, 2.8f), camPos, camRight, 26.0f, 0.70f,
-                        g_ramenSpatialGainL, g_ramenSpatialGainR);
-    computeSpatialGains(glm::vec3(-6.8f, 1.8f, 3.0f), camPos, camRight, 22.0f, 0.24f,
-                        g_konbiniSpatialGainL, g_konbiniSpatialGainR);
+    computeSpatialGains(glm::vec3(-6.45f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.35f, g_barSpatialGainL, g_barSpatialGainR);
+    computeSpatialGains(glm::vec3(7.5f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.28f, g_hotelSpatialGainL, g_hotelSpatialGainR);
+    computeSpatialGains(glm::vec3(6.8f, 1.8f, 2.8f), camPos, camRight, 26.0f, 0.70f, g_ramenSpatialGainL, g_ramenSpatialGainR);
+    computeSpatialGains(glm::vec3(-6.8f, 1.8f, 3.0f), camPos, camRight, 22.0f, 0.24f, g_konbiniSpatialGainL, g_konbiniSpatialGainR);
 
     // Periodic konbini customer activity triggering
     g_konbiniTimer -= deltaTime;
     if (g_konbiniTimer <= 0.0f) {
-        float distToStore = glm::length(glm::vec3(-6.8f, 1.8f, 3.0f) - camPos);
-        if (distToStore < 32.0f) {
-            if (g_konbiniAlt) {
-                g_triggerKonbiniCash.store(true);
-            } else {
-                g_triggerKonbiniChime.store(true);
+        if (!g_isBlackout.load()) {
+            float distToStore = glm::length(glm::vec3(-6.8f, 1.8f, 3.0f) - camPos);
+            if (distToStore < 32.0f) {
+                if (g_konbiniAlt) g_triggerKonbiniCash.store(true);
+                else g_triggerKonbiniChime.store(true);
+                g_konbiniAlt = !g_konbiniAlt;
             }
-            g_konbiniAlt = !g_konbiniAlt;
         }
         g_konbiniTimer = 11.0f + static_cast<float>(rand() % 9);
     }
@@ -369,12 +458,10 @@ void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
     g_thunderTimer -= deltaTime;
     if (g_thunderTimer <= 0.0f) {
         g_thunderTimeLeft = 3.4f;
-        g_thunderPhase1 = 0.0f;
-        g_thunderPhase2 = 0.0f;
+        g_thunderPhase1 = 0.0f; g_thunderPhase2 = 0.0f;
         g_thunderTimer = 18.0f + static_cast<float>(rand() % 16);
     }
 
-    // Footstep pacing: 0.33s for sprinting, 0.46s for walking with natural randomization
     if (isWalking) {
         g_stepAccumulator += deltaTime;
         float interval = isSprinting ? 0.33f : 0.46f;
@@ -383,11 +470,8 @@ void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
             g_footstepAlt = !g_footstepAlt;
             float pitchJitter = (((rand() % 100) / 100.0f) - 0.5f) * 0.12f;
             float volJitter = (((rand() % 100) / 100.0f) - 0.5f) * 0.06f;
-            float basePitch = isSprinting ? 1.05f : 0.98f;
-            float altPitch = g_footstepAlt ? -0.025f : 0.025f;
-            float pitch = basePitch + altPitch + pitchJitter;
-            float baseVol = isSprinting ? 0.38f : 0.26f;
-            float volume = baseVol + volJitter;
+            float pitch = (isSprinting ? 1.05f : 0.98f) + (g_footstepAlt ? -0.025f : 0.025f) + pitchJitter;
+            float volume = (isSprinting ? 0.38f : 0.26f) + volJitter;
             g_nextStepPitch.store(pitch);
             g_nextStepVolume.store(volume);
             g_triggerFootstep.store(true);
@@ -398,6 +482,9 @@ void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
     }
 }
 
-void Audio::setRainVolume(float volume) {
-    g_rainVolume.store(volume);
-}
+void Audio::setRainVolume(float volume) { g_rainVolume.store(volume); }
+void Audio::triggerArcSpark() { g_triggerArcSpark.store(true); }
+void Audio::triggerBreakerTrip() { g_triggerBreakerTrip.store(true); }
+void Audio::triggerPowerRestore() { g_triggerPowerRestore.store(true); }
+void Audio::setCinematicMusic(bool enabled) { g_cinematicMusic.store(enabled); }
+void Audio::setBlackout(bool active) { g_isBlackout.store(active); }

@@ -53,6 +53,7 @@ uniform bool isRoad;
 uniform bool isEmissive;
 uniform bool isFlickering;
 uniform float neonFlicker;
+uniform float emissiveBoost;
 uniform bool fogEnabled;
 
 // Procedural noise and fractal brownian motion for puddles
@@ -97,11 +98,38 @@ vec3 ACESFilm(vec3 x) {
 
 void main() {
     if (isEmissive) {
-        float flicker = isFlickering ? (neonFlicker > 0.0 ? neonFlicker : 1.0) : 1.0;
-        vec3 col = vertexColor * 1.25 * flicker;
-        if (hasTexture) {
-            col = texture(diffuseTexture, TexCoords).rgb * 1.30 * flicker;
+        float boost = emissiveBoost > 0.05 ? emissiveBoost : 1.0;
+        float flicker = isFlickering ? neonFlicker : (neonFlicker < 0.99 ? neonFlicker : 1.0);
+        float maxC = max(vertexColor.r, max(vertexColor.g, vertexColor.b));
+        float minC = min(vertexColor.r, min(vertexColor.g, vertexColor.b));
+        float sat = maxC > 0.001 ? (maxC - minC) / maxC : 0.0;
+
+        float flash = 0.0;
+        if (spotLight.enabled) {
+            vec3 toLight = spotLight.position - FragPos;
+            float dist = length(toLight);
+            vec3 lightDir = toLight / dist;
+            float theta = dot(lightDir, normalize(-spotLight.direction));
+            float epsilon = spotLight.cutOff - spotLight.outerCutOff;
+            float intensity = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
+            float atten = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+            vec3 n = (length(Normal) > 0.1) ? normalize(Normal) : lightDir;
+            flash = max(dot(n, lightDir), 0.28) * intensity * atten * 3.2;
         }
+
+        vec3 baseMat = hasTexture ? texture(diffuseTexture, TexCoords).rgb : vertexColor;
+        vec3 physicalReflection = baseMat * (0.05 + flash);
+
+        vec3 emissiveGlow = vec3(0.0);
+        if (maxC < 0.20) {
+            emissiveGlow = vertexColor * 0.15;
+        } else if (maxC < 0.58 && sat < 0.20) {
+            emissiveGlow = vertexColor * 0.20;
+        } else {
+            emissiveGlow = baseMat * (1.35 * boost) * flicker;
+        }
+
+        vec3 col = emissiveGlow + physicalReflection;
         if (fogEnabled && FragPos.y < 70.0) {
             float dist = length(viewPos - FragPos);
             float fogFactor = clamp(1.0 - exp(-dist * 0.008), 0.0, 0.70);
@@ -138,7 +166,9 @@ void main() {
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, baseColor, shininess, specularStrength);
     }
 
-    result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, shininess, specularStrength);
+    if (spotLight.enabled) {
+        result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, shininess, specularStrength);
+    }
 
     if (fogEnabled) {
         float dist = length(viewPos - FragPos);
@@ -171,12 +201,11 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 baseColor, flo
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength) {
     vec3 lightVec = light.position - fragPos;
-    float distSq = dot(lightVec, lightVec);
-    if (distSq > 256.0) {
+    if (abs(lightVec.z) > 16.0 || abs(lightVec.x) > 16.0) {
         return vec3(0.0);
     }
-    float NdotL = dot(normal, lightVec);
-    if (NdotL <= 0.0) {
+    float distSq = dot(lightVec, lightVec);
+    if (distSq > 256.0) {
         return vec3(0.0);
     }
     float invDist = inversesqrt(distSq);
@@ -185,7 +214,8 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     float fade = clamp(1.0 - distSq * (1.0 / 256.0), 0.0, 1.0);
     attenuation *= fade;
 
-    float diff = NdotL * invDist;
+    float diff = max(dot(normal, lightVec * invDist), 0.0);
+    vec3 ambient = light.ambient * baseColor;
     vec3 diffuse = light.diffuse * (diff * baseColor);
 
     vec3 specular = vec3(0.0);
@@ -198,7 +228,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
         }
     }
 
-    return (diffuse + specular) * attenuation;
+    return (ambient + diffuse + specular) * attenuation;
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor, float shininess, float specularStrength) {
@@ -206,6 +236,9 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
         return vec3(0.0);
     }
     vec3 lightVec = light.position - fragPos;
+    if (abs(lightVec.z) > 20.0 || abs(lightVec.x) > 20.0) {
+        return vec3(0.0);
+    }
     float distSq = dot(lightVec, lightVec);
     if (distSq > 400.0) {
         return vec3(0.0);

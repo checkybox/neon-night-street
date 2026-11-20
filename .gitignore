@@ -1,6 +1,8 @@
 # Binaries and object files
 *.o
 *.obj
+!assets/models/*.obj
+!assets/**/*.obj
 *.exe
 *.out
 *.app
@@ -10,6 +12,11 @@ x64/
 x86/
 Debug/
 Release/
+
+# Static and shared libraries
+*.lib
+!lib/*.lib
+!lib/glfw3.lib
 
 # Visual Studio files
 .vs/
