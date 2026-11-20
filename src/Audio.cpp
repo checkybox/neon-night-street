@@ -165,7 +165,7 @@ static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pIn
             g_footstepTimeLeft -= 1.0f / 48000.0f;
         }
 
-        // Subdued 3D spatialized electrical mains hum and dielectric arc crackles - active ONLY during surge
+        // Subdued spatialized electrical mains hum and dielectric arc crackles - active only during surge
         if ((humGainL > 0.0005f || humGainR > 0.0005f) && std::abs(flickerVal - 1.0f) > 0.03f) {
             float hum60  = std::sin(g_humPhase60) * 0.25f;
             float hum120 = std::sin(g_humPhase120) * 0.55f;
@@ -335,12 +335,12 @@ void Audio::update(bool isWalking, bool isSprinting, float deltaTime,
     g_isWalking.store(isWalking);
     g_isSprinting.store(isSprinting);
 
-    // 3D spatial calculations for neon sign electrical fixture
+    // Spatial calculations for neon sign electrical fixture
     computeSpatialGains(glm::vec3(-6.45f, 3.55f, -22.0f), camPos, camRight, 18.0f, 0.18f,
                         g_neonSpatialGainL, g_neonSpatialGainR);
     g_neonFlicker.store(neonFlicker);
 
-    // 3D spatial calculations for Points of Interest
+    // Spatial calculations for points of interest
     computeSpatialGains(glm::vec3(-6.45f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.35f,
                         g_barSpatialGainL, g_barSpatialGainR);
     computeSpatialGains(glm::vec3(7.5f, 1.8f, -22.0f), camPos, camRight, 24.0f, 0.28f,

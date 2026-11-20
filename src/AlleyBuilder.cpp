@@ -214,7 +214,7 @@ void AlleyBuilder::buildDeadEnds(std::vector<SceneNode>& rootNodes,
         CityBuilder::appendBox(fenceVerts, fenceIdxs, 0.10f, 0.38f, 0.10f, postCol, armTr);
     }
 
-    // 3 horizontal barbed wire strands across the angled top arms
+    // Barbed wire strands across the angled top arms
     float barbYs[] = { 2.22f, 2.34f, 2.46f };
     float barbZs[] = { -2.46f, -2.38f, -2.30f };
     for (int b = 0; b < 3; ++b) {

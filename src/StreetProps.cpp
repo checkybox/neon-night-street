@@ -25,7 +25,7 @@ void StreetProps::buildConstructionBarriers(std::vector<SceneNode>& rootNodes,
     for (float bz : barrierZs) {
         float dirZ = (bz < 0.0f) ? 1.0f : -1.0f;
 
-        // 4 modular concrete Jersey highway barriers across the 8m carriageway
+        // Modular concrete Jersey highway barriers across the carriageway
         for (float bx = -3.15f; bx <= 3.15f; bx += 2.10f) {
             // Wide sloped concrete base
             addBBox(2.00f, 0.30f, 0.65f, concCol, glm::vec3(bx, 0.15f, bz));
@@ -55,7 +55,7 @@ void StreetProps::buildConstructionBarriers(std::vector<SceneNode>& rootNodes,
             addBBox(0.50f, 0.10f, 0.02f, sCol, glm::vec3(-3.75f + s * 0.50f, 1.30f, bz + dirZ * 0.055f));
         }
 
-        // Warning sign plaque: "ROAD CLOSED"
+        // Warning sign plaque with road closure indication
         addBBox(1.80f, 0.65f, 0.04f, barrelWhite, glm::vec3(0.0f, 1.75f, bz));
         addBBox(1.74f, 0.59f, 0.02f, hazBlack, glm::vec3(0.0f, 1.75f, bz + dirZ * 0.025f));
         addBBox(1.60f, 0.18f, 0.02f, barrelOrange, glm::vec3(0.0f, 1.82f, bz + dirZ * 0.035f));
@@ -117,7 +117,7 @@ void StreetProps::buildAlleyClutter(std::vector<SceneNode>& rootNodes) {
     // Side forklift pockets
     addCBox(0.14f, 0.18f, 1.25f, glm::vec3(0.10f, 0.15f, 0.11f), glm::vec3(dX - 1.02f, 0.75f, dZ));
     addCBox(0.14f, 0.18f, 1.25f, glm::vec3(0.10f, 0.15f, 0.11f), glm::vec3(dX + 1.02f, 0.75f, dZ));
-    // 4 heavy steel caster wheel assemblies
+    // Heavy steel caster wheel assemblies
     for (float wx : { -0.80f, 0.80f }) {
         for (float wz : { -0.45f, 0.45f }) {
             addCBox(0.12f, 0.12f, 0.12f, lidBlack, glm::vec3(dX + wx, 0.08f, dZ + wz));
@@ -182,7 +182,7 @@ void StreetProps::buildBuildingEntrances(std::vector<SceneNode>& rootNodes,
     glm::vec3 warmLobby(1.0f, 0.88f, 0.65f);
     glm::vec3 darkWood(0.24f, 0.14f, 0.10f);
 
-    // 1. PENCIL BUILDING (West side, X = -6.45f, Z = 21.0f)
+    // Pencil building west entrance
     float pX = -6.45f, pZ = 21.0f;
     // Entrance frame jambs and lintel
     addEBox(0.12f, 2.50f, 0.08f, frameDark, glm::vec3(pX, 1.25f, pZ - 0.76f));
@@ -214,7 +214,7 @@ void StreetProps::buildBuildingEntrances(std::vector<SceneNode>& rootNodes,
                                   glm::translate(glm::mat4(1.0f), glm::vec3(pX + 0.30f, 2.62f, pZ)), true));
     pointLights.push_back({ glm::vec3(pX + 0.60f, 2.45f, pZ), warmLobby * 0.04f, warmLobby * 1.6f, warmLobby * 1.2f, 1.0f, 0.20f, 0.10f });
 
-    // 2. BOOKSTORE (East side, X = 6.45f, Z = 35.8f)
+    // Bookstore east entrance
     float bX = 6.45f, bZ = 35.8f;
     // Dark frame jambs, lintel, and middle transom divider
     addEBox(0.12f, 2.45f, 0.09f, frameDark, glm::vec3(bX, 1.225f, bZ - 0.60f));
@@ -235,7 +235,7 @@ void StreetProps::buildBuildingEntrances(std::vector<SceneNode>& rootNodes,
                      * glm::rotate(glm::mat4(1.0f), glm::radians(12.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     rootNodes.push_back(SceneNode(bookAwning, bAwnTr));
 
-    // 3. EAST END CAP BUILDING (East side, X = 6.45f, Z = -66.0f)
+    // East end cap building entrance
     float eX = 6.45f, eZ = -66.0f;
     // Heavy industrial steel door frame jambs and lintel
     addEBox(0.12f, 2.30f, 0.08f, frameDark, glm::vec3(eX, 1.15f, eZ - 0.58f));
@@ -250,7 +250,7 @@ void StreetProps::buildBuildingEntrances(std::vector<SceneNode>& rootNodes,
     rootNodes.push_back(SceneNode(CityBuilder::createBox(0.10f, 0.04f, 0.10f, glm::vec3(1.0f, 0.85f, 0.50f)),
                                   glm::translate(glm::mat4(1.0f), glm::vec3(eX - 0.10f, 2.40f, eZ)), true));
 
-    // 4. INDUSTRIAL ANNEX (West side, X = -6.45f, Z = -63.5f)
+    // Industrial annex entrance on west side
     float aX = -6.45f, aZ = -63.5f;
     addEBox(0.12f, 2.25f, 0.08f, frameDark, glm::vec3(aX, 1.125f, aZ - 0.56f));
     addEBox(0.12f, 2.25f, 0.08f, frameDark, glm::vec3(aX, 1.125f, aZ + 0.56f));
@@ -282,7 +282,7 @@ void StreetProps::buildUpperWindows(std::vector<SceneNode>& rootNodes) {
     glm::vec3 softCyan(0.40f, 0.75f, 0.85f);
     glm::vec3 blindAmber(0.70f, 0.55f, 0.30f);
 
-    // Multi-floor window arrays for Pencil Building (X = -6.45f, Z in [18.0f, 24.0f])
+    // Multi-floor window arrays for pencil building
     for (int floor = 0; floor < 3; ++floor) {
         float wy = 4.8f + floor * 3.0f;
         for (float wz : { 19.2f, 21.0f, 22.8f }) {
@@ -299,7 +299,7 @@ void StreetProps::buildUpperWindows(std::vector<SceneNode>& rootNodes) {
         }
     }
 
-    // Upper floor windows for Pharmacy Building (X = -6.45f, Z in [26.0f, 36.5f])
+    // Upper floor windows for pharmacy building
     for (float wz : { 27.2f, 29.8f, 32.5f, 35.2f }) {
         float wy = 5.6f;
         addWBox(0.08f, 1.50f, 1.20f, frameDark, glm::vec3(-6.45f, wy, wz));
@@ -311,7 +311,7 @@ void StreetProps::buildUpperWindows(std::vector<SceneNode>& rootNodes) {
         }
     }
 
-    // Upper floor windows for East Commercial Towers (X = 6.45f, Z in [-68.0f, -60.0f])
+    // Upper floor windows for east commercial towers
     float wy = 5.2f;
     for (float wz : { -68.5f, -66.0f, -63.5f }) {
         addWBox(0.08f, 1.50f, 1.20f, frameDark, glm::vec3(6.45f, wy, wz));

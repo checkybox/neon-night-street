@@ -2,9 +2,11 @@
 #include "CityBuilder.h"
 #include "AlleyBuilder.h"
 #include "ShopBuilder.h"
+#include "DecalBuilder.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <cmath>
+#include <algorithm>
 
 SceneNode::SceneNode() 
     : mesh(nullptr), localTransform(glm::mat4(1.0f)), isEmissive(false), isRoad(false), isFlickering(false), texture(nullptr) {}
@@ -77,37 +79,11 @@ Scene::Scene()
 Scene::~Scene() {}
 
 std::shared_ptr<Mesh> Scene::createPlane(float width, float depth, const glm::vec3& color, float tileX, float tileY) {
-    float hw = width * 0.5f, hd = depth * 0.5f;
-    std::vector<Vertex> vertices = {
-        { {-hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, tileY} }, { { hw, 0.0f, -hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, tileY} },
-        { { hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {tileX, 0.0f} }, { {-hw, 0.0f,  hd}, {0.0f, 1.0f, 0.0f}, color, {0.0f, 0.0f} }
-    };
-    std::vector<unsigned int> indices = { 0, 2, 1, 0, 3, 2 };
-    return std::make_shared<Mesh>(vertices, indices);
+    return CityBuilder::createPlane(width, depth, color, tileX, tileY);
 }
 
 std::shared_ptr<Mesh> Scene::createBox(float width, float height, float depth, const glm::vec3& color) {
-    float w = width * 0.5f, h = height * 0.5f, d = depth * 0.5f;
-    std::vector<Vertex> vertices = {
-        { {-w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 0.0f} }, { { w, -h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 0.0f} },
-        { { w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {1.0f, 1.0f} }, { {-w,  h,  d}, { 0.0f,  0.0f,  1.0f}, color, {0.0f, 1.0f} },
-        { { w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 0.0f} }, { {-w, -h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 0.0f} },
-        { {-w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {1.0f, 1.0f} }, { { w,  h, -d}, { 0.0f,  0.0f, -1.0f}, color, {0.0f, 1.0f} },
-        { {-w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w,  h,  d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, { 0.0f,  1.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { {-w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w, -h,  d}, { 0.0f, -1.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { { w, -h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { { w, -h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { { w,  h, -d}, { 1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { { w,  h,  d}, { 1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} },
-        { {-w, -h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 0.0f} }, { {-w, -h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 0.0f} },
-        { {-w,  h,  d}, {-1.0f,  0.0f,  0.0f}, color, {1.0f, 1.0f} }, { {-w,  h, -d}, {-1.0f,  0.0f,  0.0f}, color, {0.0f, 1.0f} }
-    };
-    std::vector<unsigned int> indices = {
-         0,  1,  2,  0,  2,  3,   4,  5,  6,  4,  6,  7,
-         8,  9, 10,  8, 10, 11,  12, 13, 14, 12, 14, 15,
-        16, 17, 18, 16, 18, 19,  20, 21, 22, 20, 22, 23
-    };
-    return std::make_shared<Mesh>(vertices, indices);
+    return CityBuilder::createBox(width, height, depth, color);
 }
 
 std::shared_ptr<Mesh> Scene::createCylinder(float radius, float height, int segments, const glm::vec3& color, bool capEnds) {
@@ -193,8 +169,8 @@ void Scene::init() {
     moonTex    = std::make_shared<Texture>("assets/textures/moon.jpg", true);
 
     dirLight.direction = glm::vec3(-0.4f, -0.65f, -0.4f);
-    dirLight.ambient   = glm::vec3(0.04f, 0.05f, 0.08f);
-    dirLight.diffuse   = glm::vec3(0.12f, 0.14f, 0.20f);
+    dirLight.ambient   = glm::vec3(0.08f, 0.09f, 0.13f);
+    dirLight.diffuse   = glm::vec3(0.18f, 0.20f, 0.28f);
     dirLight.specular  = glm::vec3(0.15f, 0.18f, 0.25f);
 
     auto baseGround = createPlane(60.0f, 80.0f, glm::vec3(0.12f), 24.0f, 32.0f);
@@ -229,16 +205,11 @@ void Scene::init() {
     std::vector<unsigned int> curbIdxs;
     struct CurbDef { float w, h, d, x, y, z; };
     static const CurbDef curbs[] = {
-        { 2.2f, 0.2f, 27.0f, -5.1f, 0.1f, -26.5f },
-        { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -12.6f },
-        { 3.1f, 0.2f, 11.5f, -5.55f, 0.1f, 2.75f },
-        { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -3.4f },
-        { 2.2f, 0.2f, 27.0f,  5.1f, 0.1f, -26.5f },
-        { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -12.6f },
-        { 2.2f, 0.2f, 21.0f,  5.1f, 0.1f, 7.5f },
-        { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -3.4f },
-        { 2.2f, 0.03f, 5.0f, -5.1f, 0.015f, 11.0f },
-        { 2.2f, 0.2f, 4.5f,  -5.1f, 0.1f, 15.75f }
+        { 2.2f, 0.2f, 27.0f, -5.1f, 0.1f, -26.5f }, { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -12.6f },
+        { 3.1f, 0.2f, 11.5f, -5.55f, 0.1f, 2.75f },  { 12.5f, 0.2f, 2.2f, -11.75f, 0.1f, -3.4f },
+        { 2.2f, 0.2f, 27.0f,  5.1f, 0.1f, -26.5f }, { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -12.6f },
+        { 2.2f, 0.2f, 21.0f,  5.1f, 0.1f, 7.5f },   { 12.5f, 0.2f, 2.2f,  11.75f, 0.1f, -3.4f },
+        { 2.2f, 0.03f, 5.0f, -5.1f, 0.015f, 11.0f }, { 2.2f, 0.2f, 4.5f,  -5.1f, 0.1f, 15.75f }
     };
     for (const auto& c : curbs) {
         CityBuilder::appendBox(curbVerts, curbIdxs, c.w, c.h, c.d, curbColor, glm::translate(glm::mat4(1.0f), glm::vec3(c.x, c.y, c.z)));
@@ -247,8 +218,8 @@ void Scene::init() {
 
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -3.0f, 1.5f, 0.0f, -1.5707963f, -6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
     rootNodes.push_back(SceneNode(createCornerCurb(-5.5f, -13.0f, 1.5f, 1.5707963f, 0.0f, -6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
-    rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -3.0f, 1.5f, -1.5707963f, -3.14159265f, 6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
-    rootNodes.push_back(SceneNode(createCornerCurb(5.5f, -13.0f, 1.5f, 3.14159265f, 1.5707963f, 6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
+    rootNodes.push_back(SceneNode(createCornerCurb( 5.5f, -3.0f, 1.5f, -1.5707963f, -3.14159265f, 6.5f, -2.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
+    rootNodes.push_back(SceneNode(createCornerCurb( 5.5f, -13.0f, 1.5f, 3.14159265f, 1.5707963f, 6.5f, -13.5f, 0.2f, 12, curbColor), glm::mat4(1.0f)));
 
     // Batched parking stall lines
     std::vector<Vertex> parkLineVerts;
@@ -261,13 +232,8 @@ void Scene::init() {
     for (float pz : { 10.3f, 12.9f, 15.5f })
         rootNodes.push_back(SceneNode(wheelStop, glm::translate(glm::mat4(1.0f), glm::vec3(-11.0f, 0.07f, pz))));
 
-    struct ParkedCarDef {
-        const char* modelPath;
-        glm::vec3 bodyColor;
-        glm::vec3 position;
-        float rotationY;
-    };
-    std::vector<ParkedCarDef> parkedCars = {
+    struct ParkedCarDef { const char* modelPath; glm::vec3 bodyColor; glm::vec3 position; float rotationY; };
+    static const ParkedCarDef parkedCars[] = {
         { "assets/models/car_sedan.obj",     glm::vec3(0.24f, 0.35f, 0.26f), glm::vec3(-9.1f, 0.0f, 10.3f),  90.0f },
         { "assets/models/car_hatchback.obj", glm::vec3(0.68f, 0.16f, 0.14f), glm::vec3(-9.1f, 0.0f, 15.5f),  90.0f },
         { "assets/models/car_sedan.obj",     glm::vec3(0.08f, 0.14f, 0.28f), glm::vec3(-4.55f, 0.0f, -57.5f), 0.0f },
@@ -302,7 +268,6 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(createBox(0.6f, 3.2f, 2.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 1.6f, -1.5f))));
     rootNodes.push_back(SceneNode(createBox(0.6f, 3.2f, 2.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 1.6f,  7.5f))));
     rootNodes.push_back(SceneNode(createBox(0.6f, 0.8f, 7.0f, storeColor), glm::translate(glm::mat4(1.0f), glm::vec3(-6.8f, 2.8f,  3.0f))));
-
     auto ladderRail = createCylinder(0.02f, 4.6f, 6, glm::vec3(0.2f, 0.2f, 0.22f), true);
     rootNodes.push_back(SceneNode(ladderRail, glm::translate(glm::mat4(1.0f), glm::vec3(-12.8f, 2.5f, -2.0f))));
     rootNodes.push_back(SceneNode(ladderRail, glm::translate(glm::mat4(1.0f), glm::vec3(-12.8f, 2.5f, -1.6f))));
@@ -322,16 +287,15 @@ void Scene::init() {
     rootNodes.push_back(SceneNode(createBox(0.1f, 2.3f, 1.6f, glm::vec3(0.12f, 0.12f, 0.14f)), glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.25f, 3.0f))));
     rootNodes.push_back(SceneNode(createBox(0.04f, 2.1f, 1.4f, glm::vec3(0.35f, 0.45f, 0.50f)), glm::translate(glm::mat4(1.0f), glm::vec3(-7.09f, 1.25f, 3.0f))));
     auto doorHandle = createCylinder(0.02f, 0.6f, 8, glm::vec3(0.85f), true);
-    rootNodes.push_back(SceneNode(doorHandle, glm::translate(glm::mat4(1.0f), glm::vec3(-7.02f, 1.25f, 2.85f))));
-    rootNodes.push_back(SceneNode(doorHandle, glm::translate(glm::mat4(1.0f), glm::vec3(-7.02f, 1.25f, 3.15f))));
+    for (float dz : { 2.85f, 3.15f }) rootNodes.push_back(SceneNode(doorHandle, glm::translate(glm::mat4(1.0f), glm::vec3(-7.02f, 1.25f, dz))));
 
     glm::vec3 warmStoreGlow(1.0f, 0.88f, 0.68f);
     auto windowFrame = createBox(0.12f, 2.3f, 1.9f, glm::vec3(0.14f, 0.14f, 0.16f));
     auto storeWindow = createBox(0.08f, 2.1f, 1.7f, warmStoreGlow);
-    rootNodes.push_back(SceneNode(windowFrame, glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.3f, 1.05f))));
-    rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, 1.05f)), true));
-    rootNodes.push_back(SceneNode(windowFrame, glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.3f, 4.95f))));
-    rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, 4.95f)), true));
+    for (float wz : { 1.05f, 4.95f }) {
+        rootNodes.push_back(SceneNode(windowFrame, glm::translate(glm::mat4(1.0f), glm::vec3(-7.1f, 1.3f, wz))));
+        rootNodes.push_back(SceneNode(storeWindow,  glm::translate(glm::mat4(1.0f), glm::vec3(-7.07f, 1.3f, wz)), true));
+    }
     addPoint(glm::vec3(-5.5f, 2.0f, 3.0f), warmStoreGlow, 0.05f, 1.8f, 1.5f, 0.16f, 0.08f);
 
     // detailed vending machines in the konbini alley alcove
@@ -368,20 +332,16 @@ void Scene::init() {
     float rightLampZ[] = { -30.0f, -18.0f, -1.0f, 13.0f };
 
     for (float z : leftLampZ) {
-        glm::mat4 poleL = glm::translate(glm::mat4(1.0f), glm::vec3(-4.2f, 2.25f, z));
-        SceneNode poleLNode(poleMesh, poleL);
-        glm::mat4 armL = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 2.1f, 0.0f));
-        SceneNode armLNode(armMesh, armL);
+        SceneNode poleLNode(poleMesh, glm::translate(glm::mat4(1.0f), glm::vec3(-4.2f, 2.25f, z)));
+        SceneNode armLNode(armMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 2.1f, 0.0f)));
         armLNode.addChild(SceneNode(cyanFixtureMesh, glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.15f, 0.0f)), true));
         poleLNode.addChild(armLNode);
         rootNodes.push_back(poleLNode);
         addPoint(glm::vec3(-3.2f, 4.2f, z), cyanLightColor, 0.05f, 1.3f, 1.2f, 0.14f, 0.07f);
     }
     for (float z : rightLampZ) {
-        glm::mat4 poleR = glm::translate(glm::mat4(1.0f), glm::vec3(4.2f, 2.25f, z));
-        SceneNode poleRNode(poleMesh, poleR);
-        glm::mat4 armR = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 2.1f, 0.0f));
-        SceneNode armRNode(armMesh, armR);
+        SceneNode poleRNode(poleMesh, glm::translate(glm::mat4(1.0f), glm::vec3(4.2f, 2.25f, z)));
+        SceneNode armRNode(armMesh, glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 2.1f, 0.0f)));
         armRNode.addChild(SceneNode(amberFixtureMesh, glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.15f, 0.0f)), true));
         poleRNode.addChild(armRNode);
         rootNodes.push_back(poleRNode);
@@ -390,7 +350,29 @@ void Scene::init() {
 
     CityBuilder::buildExtendedStreet(rootNodes, pointLights, asphaltTex);
     AlleyBuilder::buildAlleys(rootNodes, pointLights);
-    CityBuilder::buildSkyscrapers(rootNodes, moonTex);
+    CityBuilder::buildSkyscrapers(skyscraperNodes, moonTex);
+    DecalBuilder::buildDecals(rootNodes, decalNodes, pointLights);
+
+    std::vector<SceneNode> opaque;
+    partitionNodes(rootNodes, glm::mat4(1.0f), opaque, emissiveNodes);
+    rootNodes = std::move(opaque);
+
+    decalShader = std::unique_ptr<Shader>(new Shader("shaders/decal.vert", "shaders/decal.frag"));
+    skyscraperShader = std::unique_ptr<Shader>(new Shader("shaders/skyscraper.vert", "shaders/skyscraper.frag"));
+    emissiveShader = std::unique_ptr<Shader>(new Shader("shaders/emissive.vert", "shaders/emissive.frag"));
+}
+
+void Scene::partitionNodes(const std::vector<SceneNode>& nodes, const glm::mat4& parentTransform,
+                           std::vector<SceneNode>& opaque, std::vector<SceneNode>& emissive) {
+    for (const auto& node : nodes) {
+        glm::mat4 worldTr = parentTransform * node.localTransform;
+        if (node.mesh) {
+            SceneNode flat(node.mesh, worldTr, node.isEmissive, node.isRoad, node.texture, node.isFlickering);
+            if (node.isEmissive) emissive.push_back(flat);
+            else opaque.push_back(flat);
+        }
+        if (!node.children.empty()) partitionNodes(node.children, worldTr, opaque, emissive);
+    }
 }
 
 void Scene::setupLights(const Shader& shader) {
@@ -398,19 +380,6 @@ void Scene::setupLights(const Shader& shader) {
     shader.setVec3("dirLight.ambient", dirLight.ambient);
     shader.setVec3("dirLight.diffuse", dirLight.diffuse);
     shader.setVec3("dirLight.specular", dirLight.specular);
-    shader.setInt("activePointLights", static_cast<int>(std::min(pointLights.size(), size_t(32))));
-
-    for (size_t i = 0; i < pointLights.size() && i < 32; ++i) {
-        std::string prefix = "pointLights[" + std::to_string(i) + "].";
-        const auto& pl = pointLights[i];
-        shader.setVec3(prefix + "position", pl.position);
-        shader.setVec3(prefix + "ambient", pl.ambient);
-        shader.setVec3(prefix + "diffuse", pl.diffuse);
-        shader.setVec3(prefix + "specular", pl.specular);
-        shader.setFloat(prefix + "constant", pl.constant);
-        shader.setFloat(prefix + "linear", pl.linear);
-        shader.setFloat(prefix + "quadratic", pl.quadratic);
-    }
 
     basePointDiffuses.clear(); basePointSpeculars.clear(); basePointAmbients.clear();
     for (const auto& pl : pointLights) {
@@ -420,7 +389,7 @@ void Scene::setupLights(const Shader& shader) {
     }
 }
 
-void Scene::render(const Shader& shader, float time) {
+void Scene::render(const Shader& shader, const glm::vec3& camPos, const glm::mat4& view, const glm::mat4& projection, float time, bool fogEnabled) {
     s_stateCache = RenderStateCache();
     bool isSurge = false;
     float surgeTime = 0.0f;
@@ -440,19 +409,14 @@ void Scene::render(const Shader& shader, float time) {
             else if (surgeTime > 0.85f && surgeTime < 0.92f) currentFlicker = 1.25f;
             else if (surgeTime > 0.95f && surgeTime < 1.10f) currentFlicker = 0.20f + 0.15f * std::sin(surgeTime * 90.0f);
             else currentFlicker = std::max(0.05f, std::min(1.4f, 0.7f + spark * 0.5f));
-        } else {
-            currentFlicker = 1.0f;
-        }
-    } else {
-        currentFlicker = 1.0f;
-    }
+        } else currentFlicker = 1.0f;
+    } else currentFlicker = 1.0f;
 
     shader.setFloat("neonFlicker", currentFlicker);
 
     // Street-wide asynchronous light modulation synchronized with transformer surge
     for (size_t i = 0; i < pointLights.size(); ++i) {
         if (i >= basePointDiffuses.size()) break;
-
         float lightFlicker = 1.0f;
         if (static_cast<int>(i) == barLightIndex) {
             lightFlicker = currentFlicker;
@@ -469,18 +433,64 @@ void Scene::render(const Shader& shader, float time) {
                 lightFlicker = std::max(0.12f, std::min(1.30f, jitter));
             }
         }
-
         pointLights[i].diffuse  = basePointDiffuses[i] * lightFlicker;
         pointLights[i].specular = basePointSpeculars[i] * lightFlicker;
         pointLights[i].ambient  = basePointAmbients[i] * lightFlicker;
-
-        std::string prefix = "pointLights[" + std::to_string(i) + "].";
-        shader.setVec3(prefix + "diffuse", pointLights[i].diffuse);
-        shader.setVec3(prefix + "specular", pointLights[i].specular);
-        shader.setVec3(prefix + "ambient", pointLights[i].ambient);
     }
 
-    for (const auto& node : rootNodes) {
-        node.draw(shader);
+    int activeCount = static_cast<int>(std::min(pointLights.size(), size_t(32)));
+    shader.setInt("activePointLights", activeCount);
+    for (int i = 0; i < activeCount; ++i) {
+        const auto& pl = pointLights[i];
+        std::string p = "pointLights[" + std::to_string(i) + "].";
+        shader.setVec3(p + "position", pl.position);
+        shader.setVec3(p + "diffuse", pl.diffuse);
+        shader.setVec3(p + "specular", pl.specular);
+        shader.setVec3(p + "ambient", pl.ambient);
+        shader.setFloat(p + "constant", pl.constant);
+        shader.setFloat(p + "linear", pl.linear);
+        shader.setFloat(p + "quadratic", pl.quadratic);
+    }
+
+    if (emissiveShader && !emissiveNodes.empty()) {
+        s_stateCache = RenderStateCache();
+        emissiveShader->use();
+        emissiveShader->setMat4("view", view);
+        emissiveShader->setMat4("projection", projection);
+        emissiveShader->setVec3("viewPos", camPos);
+        emissiveShader->setBool("fogEnabled", fogEnabled);
+        emissiveShader->setFloat("neonFlicker", currentFlicker);
+        for (const auto& node : emissiveNodes) node.draw(*emissiveShader);
+    }
+
+    s_stateCache = RenderStateCache();
+    shader.use();
+    for (const auto& node : rootNodes) node.draw(shader);
+
+    if (skyscraperShader && !skyscraperNodes.empty()) {
+        s_stateCache = RenderStateCache();
+        skyscraperShader->use();
+        skyscraperShader->setMat4("view", view);
+        skyscraperShader->setMat4("projection", projection);
+        skyscraperShader->setVec3("viewPos", camPos);
+        skyscraperShader->setBool("fogEnabled", fogEnabled);
+        skyscraperShader->setVec3("dirLight.direction", dirLight.direction);
+        skyscraperShader->setVec3("dirLight.ambient", dirLight.ambient);
+        skyscraperShader->setVec3("dirLight.diffuse", dirLight.diffuse);
+        for (const auto& node : skyscraperNodes) node.draw(*skyscraperShader);
+    }
+
+    if (decalShader && !decalNodes.empty()) {
+        s_stateCache = RenderStateCache();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        decalShader->use();
+        decalShader->setMat4("view", view);
+        decalShader->setMat4("projection", projection);
+        decalShader->setVec3("viewPos", camPos);
+        decalShader->setBool("fogEnabled", fogEnabled);
+        decalShader->setFloat("neonFlicker", currentFlicker);
+        for (const auto& decal : decalNodes) decal.draw(*decalShader);
+        glDisable(GL_BLEND);
     }
 }

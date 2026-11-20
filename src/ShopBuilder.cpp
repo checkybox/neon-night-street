@@ -70,56 +70,115 @@ void ShopBuilder::buildRamenShop(std::vector<SceneNode>& rootNodes,
 
     glm::vec3 wallCol(0.22f, 0.17f, 0.16f);
     glm::vec3 woodCol(0.38f, 0.22f, 0.12f);
+    glm::vec3 darkOak(0.25f, 0.14f, 0.08f);
     glm::vec3 stoolCol(0.12f, 0.12f, 0.14f);
+    glm::vec3 steelCol(0.72f, 0.74f, 0.76f);
+    glm::vec3 tileCol(0.16f, 0.18f, 0.20f);
 
-    // North & South building flanks
-    addRamenBox(7.5f, 6.5f, 3.0f, wallCol, glm::vec3(10.25f, 3.25f, -1.0f));
+    // North & South building flanks (widened carving on the left side)
+    addRamenBox(7.5f, 6.5f, 3.0f, wallCol, glm::vec3(10.25f, 3.25f, -2.5f));
     addRamenBox(7.5f, 6.5f, 3.0f, wallCol, glm::vec3(10.25f, 3.25f,  7.0f));
-    // Header lintel over recessed nook
-    addRamenBox(7.5f, 3.8f, 5.0f, wallCol, glm::vec3(10.25f, 4.60f,  3.0f));
-    // Rear recessed alcove back wall
-    addRamenBox(5.0f, 2.7f, 5.0f, wallCol, glm::vec3(10.70f, 1.35f,  3.0f));
+    // Header lintel over wide dining nook & service corridor opening
+    addRamenBox(7.5f, 3.8f, 6.5f, wallCol, glm::vec3(10.25f, 4.60f,  2.25f));
 
-    // Wooden timber floor decking in alcove
-    addRamenBox(1.7f, 0.08f, 5.0f, glm::vec3(0.28f, 0.18f, 0.11f), glm::vec3(7.35f, 0.14f, 3.0f));
+    // Wooden timber floor decking covering the entire ramen shop interior
+    glm::vec3 woodDeck(0.28f, 0.18f, 0.11f);
+    addRamenBox(3.40f, 0.08f, 4.30f, woodDeck, glm::vec3(8.15f, 0.14f, 3.35f));
+    addRamenBox(8.10f, 0.08f, 2.20f, woodDeck, glm::vec3(10.50f, 0.14f, 0.10f));
+    addRamenBox(0.20f, 0.09f, 6.50f, glm::vec3(0.20f, 0.12f, 0.07f), glm::vec3(6.45f, 0.145f, 2.25f));
 
-    // Wooden dining counter
-    addRamenBox(0.55f, 0.95f, 3.6f, woodCol, glm::vec3(7.85f, 0.55f, 3.0f));
-    addRamenBox(0.65f, 0.06f, 3.8f, glm::vec3(0.48f, 0.28f, 0.14f), glm::vec3(7.85f, 1.05f, 3.0f));
+    // Customer wooden dining counter
+    addRamenBox(0.55f, 0.95f, 3.6f, woodCol, glm::vec3(7.85f, 0.55f, 3.3f));
+    addRamenBox(0.65f, 0.06f, 3.8f, glm::vec3(0.48f, 0.28f, 0.14f), glm::vec3(7.85f, 1.05f, 3.3f));
+    addRamenBox(0.55f, 0.95f, 0.06f, woodCol, glm::vec3(7.85f, 0.55f, 1.45f));
 
-    // 3 dining stools
-    for (float sz : { 1.8f, 3.0f, 4.2f }) {
+    // Customer dining stools
+    for (float sz : { 2.1f, 3.3f, 4.5f }) {
         addRamenCyl(0.035f, 0.65f, 8, stoolCol, glm::vec3(7.15f, 0.42f, sz));
         addRamenCyl(0.20f, 0.06f, 12, glm::vec3(0.45f, 0.25f, 0.12f), glm::vec3(7.15f, 0.74f, sz));
     }
 
     // Ceramic ramen bowls with noodles & chopsticks on the counter
-    for (float bz : { 1.8f, 3.0f, 4.2f }) {
+    for (float bz : { 2.1f, 3.3f, 4.5f }) {
         addRamenCyl(0.14f, 0.10f, 10, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(7.75f, 1.13f, bz));
         addRamenCyl(0.12f, 0.03f, 8, glm::vec3(0.92f, 0.78f, 0.35f), glm::vec3(7.75f, 1.17f, bz));
         addRamenBox(0.28f, 0.015f, 0.015f, glm::vec3(0.85f, 0.65f, 0.35f), glm::vec3(7.75f, 1.20f, bz));
     }
 
-    // Indigo Noren fabric curtain panels hanging from the nook lintel
-    glm::vec3 norenIndigo(0.10f, 0.14f, 0.28f);
-    glm::vec3 norenCrest(0.90f, 0.88f, 0.78f);
+    // Kitchen prep counter with stainless steel top behind dining counter
+    addRamenBox(0.55f, 0.90f, 3.8f, darkOak,  glm::vec3(9.10f, 0.55f, 3.3f));
+    addRamenBox(0.60f, 0.04f, 3.9f, steelCol, glm::vec3(9.10f, 1.02f, 3.3f));
+    addRamenBox(0.55f, 0.90f, 0.06f, darkOak, glm::vec3(9.10f, 0.55f, 1.40f));
+
+    // Bar entry: Staff flip-up counter flap connecting front counter to prep counter
+    addRamenBox(0.70f, 0.05f, 0.18f, darkOak, glm::vec3(8.475f, 1.05f, 1.45f));
+
+    // Multi-tier wooden backbar shelving against partition wall
+    float shX = 9.65f;
+    addRamenBox(0.25f, 1.90f, 3.8f, darkOak, glm::vec3(shX, 1.65f, 3.3f));
+    for (float sy : { 1.10f, 1.50f, 1.90f, 2.30f }) {
+        addRamenBox(0.32f, 0.04f, 3.7f, woodCol, glm::vec3(shX - 0.04f, sy, 3.3f));
+    }
+    // Rows of sake / whisky bottles and condiment jars on shelves
+    glm::vec3 botGreen(0.12f, 0.32f, 0.18f), botAmber(0.55f, 0.32f, 0.10f), botClear(0.70f, 0.78f, 0.82f);
+    for (int b = 0; b < 8; ++b) {
+        float bz = 1.7f + b * 0.45f;
+        glm::vec3 bCol = (b % 3 == 0) ? botGreen : ((b % 3 == 1) ? botAmber : botClear);
+        addRamenCyl(0.045f, 0.22f, 8, bCol, glm::vec3(shX - 0.08f, 1.24f, bz));
+        addRamenCyl(0.018f, 0.06f, 6, glm::vec3(0.12f), glm::vec3(shX - 0.08f, 1.37f, bz));
+    }
+    for (float bz : { 2.0f, 2.6f, 3.2f, 3.8f, 4.4f }) {
+        addRamenCyl(0.10f, 0.08f, 8, glm::vec3(0.85f, 0.82f, 0.78f), glm::vec3(shX - 0.06f, 1.56f, bz));
+        addRamenCyl(0.08f, 0.08f, 8, glm::vec3(0.80f, 0.78f, 0.75f), glm::vec3(shX - 0.06f, 1.63f, bz));
+    }
+
+    // Corridor walls & ceiling (walkway floor is unified with woodDeck)
+    addRamenBox(6.5f, 2.80f, 0.15f, wallCol, glm::vec3(11.25f, 1.50f, -1.05f));
+    addRamenBox(4.5f, 2.80f, 0.15f, wallCol, glm::vec3(12.25f, 1.50f,  1.25f));
+    addRamenBox(6.5f, 0.15f, 2.2f, wallCol, glm::vec3(11.25f, 2.85f, 0.1f));
+
+    // Side Door 1 (Right wall, Kitchen prep door parallel to wall at Z = 1.25m)
+    addRamenBox(1.10f, 2.20f, 0.05f, glm::vec3(0.18f), glm::vec3(11.5f, 1.20f, 1.20f));
+    addRamenBox(0.98f, 2.10f, 0.04f, steelCol,         glm::vec3(11.5f, 1.20f, 1.18f));
+    addRamenBox(0.96f, 0.35f, 0.02f, glm::vec3(0.45f), glm::vec3(11.5f, 0.28f, 1.16f));
+    addRamenBox(0.06f, 0.28f, 0.03f, steelCol * 1.3f,  glm::vec3(11.1f, 1.15f, 1.16f));
+
+    // Side Door 2 (Left wall, Staff / restroom door parallel to wall at Z = -1.05m)
+    addRamenBox(1.10f, 2.20f, 0.05f, glm::vec3(0.18f), glm::vec3(11.5f, 1.20f, -1.00f));
+    addRamenBox(0.98f, 2.10f, 0.04f, darkOak,          glm::vec3(11.5f, 1.20f, -0.98f));
+    addRamenBox(0.12f, 0.04f, 0.03f, glm::vec3(0.85f, 0.72f, 0.28f), glm::vec3(11.85f, 1.15f, -0.96f));
+
+    // End of Corridor: Heavy industrial emergency exit door with silver panic bar
+    addRamenBox(0.10f, 2.80f, 2.2f, wallCol, glm::vec3(14.55f, 1.50f, 0.1f));
+    addRamenBox(0.08f, 2.25f, 1.20f, glm::vec3(0.15f, 0.16f, 0.18f), glm::vec3(14.48f, 1.20f, 0.1f));
+    addRamenBox(0.06f, 2.15f, 1.08f, steelCol * 0.45f, glm::vec3(14.46f, 1.20f, 0.1f));
+    addRamenBox(0.04f, 0.08f, 0.95f, steelCol, glm::vec3(14.40f, 1.10f, 0.1f));
+    addRamenBox(0.08f, 0.24f, 0.48f, glm::vec3(0.12f), glm::vec3(14.42f, 2.45f, 0.1f));
+
+    // Indigo Noren fabric curtain panels hanging from front nook lintel
+    glm::vec3 norenIndigo(0.10f, 0.14f, 0.28f), norenCrest(0.90f, 0.88f, 0.78f);
     float norenX = 6.55f, norenY = 2.40f;
-    for (int p = 0; p < 4; ++p) {
-        float pz = 1.0f + p * 1.0f;
+    for (int p = 0; p < 5; ++p) {
+        float pz = 0.5f + p * 1.0f;
         addRamenBox(0.03f, 0.55f, 0.90f, norenIndigo, glm::vec3(norenX, norenY, pz));
         addRamenBox(0.04f, 0.22f, 0.24f, norenCrest, glm::vec3(norenX - 0.005f, norenY - 0.05f, pz));
     }
-    addRamenBox(0.04f, 0.04f, 4.2f, glm::vec3(0.35f, 0.22f, 0.12f), glm::vec3(norenX, 2.70f, 2.5f));
+    addRamenBox(0.04f, 0.04f, 5.2f, glm::vec3(0.35f, 0.22f, 0.12f), glm::vec3(norenX, 2.70f, 2.5f));
 
+    // Single static batch draw call for the entire detailed ramen shop, backbar & corridor
     rootNodes.push_back(SceneNode(std::make_shared<Mesh>(rVerts, rIdxs), glm::mat4(1.0f), false));
 
+    // Glowing green lens for emergency exit sign at end of corridor
+    rootNodes.push_back(SceneNode(CityBuilder::createBox(0.04f, 0.18f, 0.42f, glm::vec3(0.12f, 1.0f, 0.35f)),
+                                  glm::translate(glm::mat4(1.0f), glm::vec3(14.37f, 2.45f, 0.1f)), true));
+
     // Exterior low pitched red awning above the nook
-    auto ramenAwning = CityBuilder::createBox(0.85f, 0.12f, 4.8f, glm::vec3(0.28f, 0.08f, 0.08f));
-    glm::mat4 awningTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.25f, 2.80f, 2.5f))
+    auto ramenAwning = CityBuilder::createBox(0.85f, 0.12f, 5.8f, glm::vec3(0.28f, 0.08f, 0.08f));
+    glm::mat4 awningTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.25f, 2.80f, 2.25f))
                        * glm::rotate(glm::mat4(1.0f), glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     rootNodes.push_back(SceneNode(ramenAwning, awningTr));
 
-    // 3D Chochin Paper Lantern mounted firmly against the south pillar wall
+    // Chochin paper lantern mounted on south pillar wall
     auto lanternMesh = Model::loadOBJ("assets/models/chochin_lantern.obj", glm::vec3(0.95f, 0.18f, 0.10f));
     if (lanternMesh) {
         glm::mat4 lanternTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.48f, 2.30f, 5.65f))
@@ -127,10 +186,10 @@ void ShopBuilder::buildRamenShop(std::vector<SceneNode>& rootNodes,
         rootNodes.push_back(SceneNode(lanternMesh, lanternTr, true));
     }
 
-    // 3D Katakana neon sign mounted above the awning
+    // Katakana neon sign mounted above the awning
     auto ramenNeonMesh = Model::loadOBJ("assets/models/neon_sign_ramen.obj", glm::vec3(1.0f, 0.22f, 0.70f));
     if (ramenNeonMesh) {
-        glm::mat4 ramenTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.42f, 3.75f, 2.5f))
+        glm::mat4 ramenTr = glm::translate(glm::mat4(1.0f), glm::vec3(6.42f, 3.75f, 2.25f))
                           * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         rootNodes.push_back(SceneNode(ramenNeonMesh, ramenTr, true));
     }
@@ -139,6 +198,11 @@ void ShopBuilder::buildRamenShop(std::vector<SceneNode>& rootNodes,
     pointLights.push_back({ glm::vec3(7.2f, 2.1f, 3.0f), glm::vec3(1.0f, 0.72f, 0.35f) * 0.06f,
                             glm::vec3(1.0f, 0.72f, 0.35f) * 2.2f, glm::vec3(1.0f, 0.72f, 0.35f) * 1.8f,
                             1.0f, 0.16f, 0.08f });
+
+    // Subtle atmospheric green emergency corridor light
+    glm::vec3 exitGreen(0.12f, 0.95f, 0.35f);
+    pointLights.push_back({ glm::vec3(13.5f, 2.3f, 0.1f), exitGreen * 0.02f, exitGreen * 1.1f, exitGreen * 0.8f,
+                            1.0f, 0.22f, 0.12f });
 }
 
 void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
@@ -187,7 +251,7 @@ void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
     rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ - 0.78f)), true, false, nullptr, true));
     rootNodes.push_back(SceneNode(stripMesh, glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 1.50f, bZ + 0.78f)), true, false, nullptr, true));
 
-    // Compact Art-Deco entrance canopy over main portal positioned to keep BAR neon sign fully visible
+    // Compact art-deco entrance canopy over main portal positioned to keep bar neon sign fully visible
     addBox(0.42f, 0.06f, 1.70f, glm::vec3(0.12f, 0.12f, 0.14f), glm::vec3(bX + 0.21f, 2.82f, bZ));
     addBox(0.03f, 0.08f, 1.74f, glm::vec3(0.85f, 0.70f, 0.28f), glm::vec3(bX + 0.42f, 2.82f, bZ));
     addBox(0.42f, 0.08f, 0.03f, glm::vec3(0.85f, 0.70f, 0.28f), glm::vec3(bX + 0.21f, 2.82f, bZ - 0.85f));
@@ -195,7 +259,7 @@ void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
     // Warm recessed canopy downlight
     addBox(0.24f, 0.015f, 0.80f, glm::vec3(1.0f, 0.88f, 0.62f), glm::vec3(bX + 0.21f, 2.78f, bZ), true);
 
-    // Secondary VIP and service door on the left side
+    // Secondary lounge and service door on the left side
     addBox(0.08f, 2.30f, 1.25f, glm::vec3(0.10f, 0.10f, 0.12f), glm::vec3(bX, 1.15f, vipZ));
     addBox(0.06f, 2.22f, 1.12f, glm::vec3(0.14f, 0.14f, 0.16f), glm::vec3(bX + 0.01f, 1.15f, vipZ));
     addBox(0.04f, 0.03f, 0.14f, glm::vec3(0.75f, 0.62f, 0.28f), glm::vec3(bX + 0.05f, 1.05f, vipZ - 0.35f));
@@ -222,7 +286,7 @@ void ShopBuilder::buildBarFacade(std::vector<SceneNode>& rootNodes,
     addBox(0.05f, 0.65f, 0.50f, glm::vec3(0.75f, 0.60f, 0.25f), glm::vec3(bX + 0.03f, 1.60f, -20.6f));
     addBox(0.06f, 0.55f, 0.40f, glm::vec3(0.98f, 0.90f, 0.65f), glm::vec3(bX + 0.04f, 1.60f, -20.6f), true);
 
-    // 3D Neon "BAR" sign overhead
+    // Neon bar sign overhead
     auto barNeonMesh = Model::loadOBJ("assets/models/neon_sign_bar.obj", glm::vec3(0.0f, 0.95f, 1.0f));
     if (barNeonMesh) {
         glm::mat4 barTr = glm::translate(glm::mat4(1.0f), glm::vec3(bX + 0.03f, 3.55f, bZ))
@@ -417,7 +481,7 @@ void ShopBuilder::buildHotel(std::vector<SceneNode>& rootNodes,
         addBox(1.06f, 1.26f, 0.05f, litS3 ? litWinCol : darkWinCol, glm::vec3(wx, 7.0f, sideZ - 0.02f), litS3);
     }
 
-    // 3D Neon Hotel Sign overhead
+    // Neon hotel sign overhead
     auto hotelNeonMesh = Model::loadOBJ("assets/models/neon_sign_hotel.obj", glm::vec3(1.0f, 0.65f, 0.15f));
     if (hotelNeonMesh) {
         glm::mat4 hotelTr = glm::translate(glm::mat4(1.0f), glm::vec3(frontX - 0.08f, 3.55f, hZ))

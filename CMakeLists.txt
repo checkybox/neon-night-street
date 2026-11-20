@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/AlleyBuilder.cpp
     src/ShopBuilder.cpp
     src/StreetProps.cpp
+    src/DecalBuilder.cpp
     src/Audio.cpp
     src/Rain.cpp
 )

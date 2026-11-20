@@ -156,7 +156,7 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable V-Sync to cap at 60 FPS and prevent CPU busy-spin loop
+    glfwSwapInterval(1); // Enable vertical sync to prevent CPU busy loop
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -246,7 +246,7 @@ int main() {
         sceneShader.setMat4("view", view);
         sceneShader.setMat4("projection", projection);
 
-        scene.render(sceneShader, neonFlickerEnabled ? currentFrame : 0.0f);
+        scene.render(sceneShader, camera.Position, view, projection, neonFlickerEnabled ? currentFrame : 0.0f, fogEnabled);
 
         rain.update(deltaTime, camera.Position);
         rain.render(view, projection);

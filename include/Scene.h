@@ -37,12 +37,18 @@ public:
     ~Scene();
 
     void init();
-    void render(const Shader& shader, float time = 0.0f);
+    void render(const Shader& shader, const glm::vec3& camPos, const glm::mat4& view, const glm::mat4& projection, float time = 0.0f, bool fogEnabled = true);
     void setupLights(const Shader& shader);
     float getNeonFlicker() const { return currentFlicker; }
 
 private:
     std::vector<SceneNode> rootNodes;
+    std::vector<SceneNode> emissiveNodes;
+    std::vector<SceneNode> skyscraperNodes;
+    std::vector<SceneNode> decalNodes;
+    std::unique_ptr<Shader> emissiveShader;
+    std::unique_ptr<Shader> skyscraperShader;
+    std::unique_ptr<Shader> decalShader;
     DirLight dirLight;
     std::vector<PointLight> pointLights;
 
@@ -58,6 +64,9 @@ private:
 
     std::shared_ptr<Texture> asphaltTex;
     std::shared_ptr<Texture> moonTex;
+
+    void partitionNodes(const std::vector<SceneNode>& nodes, const glm::mat4& parentTransform,
+                        std::vector<SceneNode>& opaque, std::vector<SceneNode>& emissive);
 
     std::shared_ptr<Mesh> createBox(float width, float height, float depth, const glm::vec3& color);
     std::shared_ptr<Mesh> createPlane(float width, float depth, const glm::vec3& color, float tileX = 1.0f, float tileY = 1.0f);

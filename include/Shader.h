@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <unordered_map>
 
 class Shader {
 public:
@@ -23,6 +24,8 @@ public:
     void setMat4(const std::string& name, const glm::mat4& mat) const;
 
 private:
+    mutable std::unordered_map<std::string, int> uniformCache;
+    int getUniformLocation(const std::string& name) const;
     void checkCompileErrors(unsigned int shader, const std::string& type);
 };
 
